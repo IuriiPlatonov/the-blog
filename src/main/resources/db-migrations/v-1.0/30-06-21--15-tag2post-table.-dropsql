@@ -1,0 +1,3 @@
+alter table tag2post drop foreign key FKpjoedhh4h917xf25el3odq20i;
+alter table tag2post drop foreign key FKjou6suf2w810t2u3l96uasw3r;
+drop table if exists tag2post;

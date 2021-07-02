@@ -1,13 +1,16 @@
 package org.example.theblog.model.entity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 
-
 @Entity
 @Data
+@EqualsAndHashCode(of = {"id"})
+@ToString(callSuper = true, of = {"name"})
 @Table(name = "users")
 public class User {
 

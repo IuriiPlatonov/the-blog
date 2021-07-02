@@ -1,6 +1,7 @@
 package org.example.theblog.model.entity;
 
 import lombok.Data;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -9,6 +10,7 @@ import java.util.List;
 @Entity
 @Data
 @Table(name = "posts")
+@ToString(callSuper = true, of = {"title"})
 public class Post {
 
     @Id
@@ -20,7 +22,7 @@ public class Post {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "moderation_status",
-            columnDefinition = "ENUM(\"NEW\", \"ACCEPTED\", \"DECLINED\") NOT NULL")
+            columnDefinition = "ENUM('NEW', 'ACCEPTED', 'DECLINED') NOT NULL DEFAULT 'NEW'")
     private ModerationStatus moderationStatus;
 
     @ManyToOne
@@ -44,4 +46,10 @@ public class Post {
 
     @OneToMany(mappedBy = "posts")
     private List<TagToPost> tags;
+
+    @OneToMany(mappedBy = "post_id")
+    private List<PostVote> postVotes;
+
+    @OneToMany(mappedBy = "post_id")
+    private List<PostComment> postComments;
 }

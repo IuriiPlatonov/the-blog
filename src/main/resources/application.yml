@@ -1,4 +1,0 @@
-spring.datasource.url: jdbc:mysql://localhost:3306/the-blog_schema?jdbcCompliantTruncation=false
-spring.datasource.username: root
-spring.datasource.password: 5O4vx85sd{4}
-spring.jpa.hibernate.ddl-auto: create

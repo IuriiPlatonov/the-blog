@@ -18,9 +18,8 @@ public class PostVote {
     @JoinColumn(nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    private Post post;
+    @Column(nullable = false)
+    private int post_id;
 
     @Column(nullable = false)
     private Timestamp time;
