@@ -17,9 +17,8 @@ public class PostComment {
     @ManyToOne
     private PostComment parent;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    private Post post;
+    @Column(nullable = false)
+    private int post_id;
 
     @ManyToOne
     @JoinColumn(nullable = false)

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="0" author="Platonov">
+        <tagDatabase tag="db_init"/>
+    </changeSet>
+
+    <include file="30-06-21--01-users-table-init.xml" relativeToChangelogFile="true"/>
+    <include file="30-06-21--04-posts-table-init.xml" relativeToChangelogFile="true"/>
+    <include file="30-06-21--07-post_votes-table-init.xml" relativeToChangelogFile="true"/>
+    <include file="30-06-21--10-tags-table-init.xml" relativeToChangelogFile="true"/>
+    <include file="30-06-21--13-tag2post-table-init.xml" relativeToChangelogFile="true"/>
+    <include file="30-06-21--16-post_comments-table-init.xml" relativeToChangelogFile="true"/>
+    <include file="30-06-21--19-captcha_codes-table-init.xml" relativeToChangelogFile="true"/>
+    <include file="30-06-21--22-global_settings-table-init.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>
