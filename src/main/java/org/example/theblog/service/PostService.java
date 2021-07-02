@@ -22,13 +22,25 @@ public class PostService {
         this.postRepository = postRepository;
     }
 
-    public PostResponse getPost(int offset, int limit, String mode) {
-        PostResponse postResponse = new PostResponse();
-
+    public PostResponse getPosts(int offset, int limit, String mode) {
         List<Post> posts = StreamSupport.stream(postRepository.findAll().spliterator(), false).toList();
 
-        postResponse.setCount(posts.size());
+        return createPostResponse(posts, offset, limit, mode);
+    }
 
+    public PostResponse searchPosts(int offset, int limit, String query) {
+        List<Post> posts = StreamSupport.stream(postRepository.findAll().spliterator(), false)
+                .filter(post -> post.getTitle().contains(query) || post.getText().contains(query))
+                .toList();
+
+        return query.trim().equals("")
+                ? getPosts(offset, limit, "recent")
+                : createPostResponse(posts, offset, limit, "recent");
+    }
+
+    private PostResponse createPostResponse(List<Post> posts, int offset, int limit, String mode) {
+        PostResponse postResponse = new PostResponse();
+        postResponse.setCount(posts.size());
         switch (mode) {
             case "recent" -> postResponse.setPosts(getPosts(posts, offset, limit,
                     (o1, o2) -> Long.compare(o2.getTime().getTime(), o1.getTime().getTime())));
@@ -42,7 +54,6 @@ public class PostService {
             case "early" -> postResponse.setPosts(getPosts(posts, offset, limit,
                     Comparator.comparing(Post::getTime)));
         }
-
         return postResponse;
     }
 
