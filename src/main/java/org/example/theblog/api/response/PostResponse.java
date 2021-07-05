@@ -8,6 +8,6 @@ import java.util.List;
 @Data
 public class PostResponse {
 
-    private int count;
+    private long count;
     private List<UserPost> posts;
 }

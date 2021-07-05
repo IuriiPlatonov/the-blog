@@ -6,12 +6,13 @@ import org.example.theblog.api.response.PostResponse;
 import org.example.theblog.model.entity.ModerationStatus;
 import org.example.theblog.model.entity.Post;
 import org.example.theblog.model.entity.PostVote;
+import org.example.theblog.model.repository.OffsetLimitPageable;
 import org.example.theblog.model.repository.PostRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.StreamSupport;
 
 @Service
 public class PostService {
@@ -23,48 +24,36 @@ public class PostService {
     }
 
     public PostResponse getPosts(int offset, int limit, String mode) {
-        List<Post> posts = StreamSupport.stream(postRepository.findAll().spliterator(), false).toList();
+        Pageable pageable = new OffsetLimitPageable(offset, limit);
 
-        return createPostResponse(posts, offset, limit, mode);
+        return switch (mode) {
+            case "popular" ->  createPostResponse(postRepository.findAllPageOrderByCommentDesc(pageable));
+            case "best" ->  createPostResponse(postRepository.findAllPageOrderByVotesDesc(pageable));
+            case "early" ->  createPostResponse(postRepository.findAllPageOrderByTime(pageable));
+            default ->  createPostResponse(postRepository.findAllPageOrderByTimeDesc(pageable));
+        };
     }
 
-    public PostResponse searchPosts(int offset, int limit, String query) {
-        List<Post> posts = StreamSupport.stream(postRepository.findAll().spliterator(), false)
-                .filter(post -> post.getTitle().contains(query) || post.getText().contains(query))
-                .toList();
+    /* public PostResponse searchPosts(int offset, int limit, String query) {
+         List<Post> posts = StreamSupport.stream(postRepository.findAll().spliterator(), false)
+                 .filter(post -> post.getTitle().contains(query) || post.getText().contains(query))
+                 .toList();
 
-        return query.trim().equals("")
-                ? getPosts(offset, limit, "recent")
-                : createPostResponse(posts, offset, limit, "recent");
-    }
-
-    private PostResponse createPostResponse(List<Post> posts, int offset, int limit, String mode) {
+         return query.trim().equals("")
+                 ? getPosts(offset, limit, "recent")
+                 : createPostResponse(posts, offset, limit, "recent");
+     }
+ */
+    private PostResponse createPostResponse(Page<Post> posts) {
         PostResponse postResponse = new PostResponse();
-        postResponse.setCount(posts.size());
-        switch (mode) {
-            case "recent" -> postResponse.setPosts(getPosts(posts, offset, limit,
-                    (o1, o2) -> Long.compare(o2.getTime().getTime(), o1.getTime().getTime())));
-
-            case "popular" -> postResponse.setPosts(getPosts(posts, offset, limit,
-                    (o1, o2) -> Integer.compare(o2.getPostComments().size(), o1.getPostComments().size())));
-
-            case "best" -> postResponse.setPosts(getPosts(posts, offset, limit,
-                    (o1, o2) -> Long.compare(getLikeCount(o2.getPostVotes()), getLikeCount(o1.getPostVotes()))));
-
-            case "early" -> postResponse.setPosts(getPosts(posts, offset, limit,
-                    Comparator.comparing(Post::getTime)));
-        }
+        postResponse.setCount(posts.getTotalElements());
+        postResponse.setPosts(getPosts(posts));
         return postResponse;
     }
 
-    private List<UserPost> getPosts(List<Post> list, int offset, int limit, Comparator<Post> comparator) {
+
+    private List<UserPost> getPosts(Page<Post> list) {
         return list.stream()
-                .sorted(comparator)
-                .skip(offset)
-                .limit(limit)
-                .filter(post -> post.getIsActive() == 1)
-                .filter(post -> post.getModerationStatus().equals(ModerationStatus.ACCEPTED))
-                .filter(post -> post.getTime().getTime() <= System.currentTimeMillis())
                 .map(post -> new UserPost(post.getId(),
                         post.getTime().getTime() / 1000,
                         new UserName(post.getUser().getId(), post.getUser().getName()),

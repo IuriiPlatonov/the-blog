@@ -23,8 +23,8 @@ public class ApiPostController {
         return ResponseEntity.ok(postService.getPosts(offset, limit, mode));
     }
 
-    @GetMapping("/post/search")
+   /* @GetMapping("/post/search")
     private ResponseEntity<PostResponse> searchPosts(@RequestParam int offset, int limit, String query) {
         return ResponseEntity.ok(postService.searchPosts(offset, limit, query));
-    }
+    }*/
 }

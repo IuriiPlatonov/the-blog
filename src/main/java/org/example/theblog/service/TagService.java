@@ -7,12 +7,9 @@ import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.TagRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 public class TagService {
@@ -29,16 +26,12 @@ public class TagService {
         TagResponse tagResponse = new TagResponse();
         Set<TagWeight> tagsWeight = new HashSet<>();
 
-        List<Tag> tags = StreamSupport.stream(tagRepository.findAll().spliterator(), false)
-                .collect(Collectors.toList());
+        List<Tag> tags = tagRepository.findAllTags();
 
-        long postsCount = StreamSupport.stream(postRepository.findAll().spliterator(), false).count();
-        int postsWithTagMaxCount = tags.stream()
-                .max(Comparator.comparingInt(o -> o.getPosts().size()))
-                .orElse(new Tag())
-                .getPosts().size();
+        int postsCount = postRepository.findAll().size();
+        int maxPostsCountInTags = tagRepository.findMaxPostsCountInTags();
 
-        double k = calculateTagRatio(postsWithTagMaxCount, postsCount);
+        double k = calculateTagRatio(maxPostsCountInTags, postsCount);
 
         if (!query.isEmpty()) {
             List<Tag> queryTags = tags.stream().filter(tag -> tag.getName().contains(query)).toList();

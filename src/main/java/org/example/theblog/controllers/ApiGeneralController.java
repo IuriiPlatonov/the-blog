@@ -2,7 +2,6 @@ package org.example.theblog.controllers;
 
 import org.example.theblog.api.response.CalendarResponse;
 import org.example.theblog.api.response.InitResponse;
-import org.example.theblog.api.response.SettingsResponse;
 import org.example.theblog.api.response.TagResponse;
 import org.example.theblog.service.CalendarService;
 import org.example.theblog.service.SettingsService;
@@ -27,7 +26,7 @@ public class ApiGeneralController {
     }
 
     @GetMapping("/api/settings")
-    private SettingsResponse getSettings() {
+    private SettingsService.SettingsResponse getSettings() {
         return settingsService.getGlobalSettings();
     }
 

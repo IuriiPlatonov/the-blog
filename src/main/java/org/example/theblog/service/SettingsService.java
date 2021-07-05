@@ -1,11 +1,16 @@
 package org.example.theblog.service;
 
-import org.example.theblog.api.response.SettingsResponse;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import org.example.theblog.model.repository.GlobalSettingRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 public class SettingsService {
+
+    public record SettingsResponse(@JsonAnyGetter Map<String, Boolean> settingKeyValue){}
 
     private final GlobalSettingRepository globalSettingRepository;
 
@@ -14,9 +19,10 @@ public class SettingsService {
     }
 
     public SettingsResponse getGlobalSettings() {
-        SettingsResponse settingsResponse = new SettingsResponse();
+        Map<String, Boolean> settingKeyValue = new HashMap<>();
+
         globalSettingRepository.findAll().forEach(globalSetting ->
-                settingsResponse.put(globalSetting.getCode(), globalSetting.getValue().equals("YES")));
-        return settingsResponse;
+                settingKeyValue.put(globalSetting.getCode(), globalSetting.getValue().equals("YES")));
+        return new SettingsResponse(settingKeyValue);
     }
 }
