@@ -1,8 +1,7 @@
 package org.example.theblog.controllers;
 
-import org.example.theblog.api.response.CalendarResponse;
+import lombok.AllArgsConstructor;
 import org.example.theblog.api.response.InitResponse;
-import org.example.theblog.api.response.TagResponse;
 import org.example.theblog.service.CalendarService;
 import org.example.theblog.service.SettingsService;
 import org.example.theblog.service.TagService;
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@AllArgsConstructor
 public class ApiGeneralController {
 
     private final SettingsService settingsService;
@@ -18,18 +18,10 @@ public class ApiGeneralController {
     private final TagService tagService;
     private final CalendarService calendarService;
 
-    public ApiGeneralController(SettingsService settingsService, InitResponse initResponse, TagService tagService, CalendarService calendarService) {
-        this.settingsService = settingsService;
-        this.initResponse = initResponse;
-        this.tagService = tagService;
-        this.calendarService = calendarService;
-    }
-
     @GetMapping("/api/settings")
     private SettingsService.SettingsResponse getSettings() {
         return settingsService.getGlobalSettings();
     }
-
 
     @GetMapping("/api/init")
     private InitResponse init() {
@@ -37,12 +29,12 @@ public class ApiGeneralController {
     }
 
     @GetMapping("/api/tag")
-    private TagResponse getTags() {
+    private TagService.TagResponse getTags() {
         return tagService.getTags("");
     }
 
     @GetMapping("/api/calendar")
-    private CalendarResponse getCalendar(@RequestParam int year) {
+    private CalendarService.CalendarResponse getCalendar(@RequestParam int year) {
         return calendarService.getCalendar(year);
     }
 }

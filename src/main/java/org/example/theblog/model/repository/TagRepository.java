@@ -12,6 +12,6 @@ public interface TagRepository extends CrudRepository<Tag, Integer> {
     @Query("select c from Tag c")
     List<Tag> findAllTags();
 
-    @Query("select MAX(c.posts.size) from Tag c")
+    @Query("select function('MAX', function('size' ,c.posts)) from Tag c")
     int findMaxPostsCountInTags();
 }

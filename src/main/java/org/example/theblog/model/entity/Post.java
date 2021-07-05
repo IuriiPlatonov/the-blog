@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.ToString;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -33,7 +33,7 @@ public class Post {
     private User user;
 
     @Column(nullable = false)
-    private Timestamp time;
+    private LocalDateTime time;
 
     @Column(nullable = false)
     private String title;
