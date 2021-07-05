@@ -1,6 +1,5 @@
 package org.example.theblog.controllers;
 
-import org.example.theblog.api.response.PostResponse;
 import org.example.theblog.service.PostService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +18,12 @@ public class ApiPostController {
     }
 
     @GetMapping("/post")
-    private ResponseEntity<PostResponse> getPosts(@RequestParam int offset, int limit, String mode) {
-        return ResponseEntity.ok(postService.getPost(offset, limit, mode));
+    private ResponseEntity<PostService.PostResponse> getPosts(@RequestParam int offset, int limit, String mode) {
+        return ResponseEntity.ok(postService.getPosts(offset, limit, mode));
+    }
+
+    @GetMapping("/post/search")
+    private ResponseEntity<PostService.PostResponse> searchPosts(@RequestParam int offset, int limit, String query) {
+        return ResponseEntity.ok(postService.searchPosts(offset, limit, query));
     }
 }

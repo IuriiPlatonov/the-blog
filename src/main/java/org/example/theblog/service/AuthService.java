@@ -1,14 +1,18 @@
 package org.example.theblog.service;
 
-import org.example.theblog.api.response.AuthResponse;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
+    record AuthorizedUser(int id, String name, String photo, String email, boolean moderation, int moderationCount,
+                          boolean settings) {
+    }
+
+    public record AuthResponse(boolean result, AuthorizedUser user) {
+    }
+
     public AuthResponse getAuth() {
-        AuthResponse authResponse = new AuthResponse();
-        authResponse.setResult(false);
-        return authResponse;
+        return new AuthResponse(false, null);
     }
 }

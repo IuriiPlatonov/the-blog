@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -22,7 +22,7 @@ public class User {
     private byte isModerator;
 
     @Column(name = "reg_time", nullable = false)
-    private Timestamp regTime;
+    private LocalDateTime regTime;
 
     @Column(nullable = false)
     private String name;

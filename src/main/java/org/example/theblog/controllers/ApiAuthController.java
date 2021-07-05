@@ -1,6 +1,5 @@
 package org.example.theblog.controllers;
 
-import org.example.theblog.api.response.AuthResponse;
 import org.example.theblog.service.AuthService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +16,7 @@ public class ApiAuthController {
     }
 
     @GetMapping("/check")
-    private AuthResponse settings(){
+    private AuthService.AuthResponse settings(){
         return authService.getAuth();
     }
 }

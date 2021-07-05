@@ -1,76 +1,67 @@
 package org.example.theblog.service;
 
-import org.example.theblog.api.response.DTO.TagWeight;
-import org.example.theblog.api.response.TagResponse;
 import org.example.theblog.model.entity.Tag;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.TagRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 public class TagService {
+    record TagWeight(String name, double weight) {
+    }
 
-    TagRepository tagRepository;
-    PostRepository postRepository;
+    public record TagResponse(Set<TagWeight> tags) {
+    }
+
+    private final TagRepository tagRepository;
+    private final int postsCount;
+    private final Set<TagWeight> tagsWeight;
+    private final int maxPostsCountInTags;
 
     public TagService(TagRepository tagRepository, PostRepository postRepository) {
         this.tagRepository = tagRepository;
-        this.postRepository = postRepository;
+        this.postsCount = postRepository.findAll().size();
+        this.tagsWeight = new HashSet<>();
+        this.maxPostsCountInTags = tagRepository.findMaxPostsCountInTags();
     }
 
     public TagResponse getTags(String query) {
-        TagResponse tagResponse = new TagResponse();
-        Set<TagWeight> tagsWeight = new HashSet<>();
-
-        List<Tag> tags = StreamSupport.stream(tagRepository.findAll().spliterator(), false)
-                .collect(Collectors.toList());
-
-        long postsCount = StreamSupport.stream(postRepository.findAll().spliterator(), false).count();
-        int postsWithTagMaxCount = tags.stream()
-                .max(Comparator.comparingInt(o -> o.getPosts().size()))
-                .orElse(new Tag())
-                .getPosts().size();
-
-        double k = calculateTagRatio(postsWithTagMaxCount, postsCount);
+        List<Tag> tags = tagRepository.findAllTags();
 
         if (!query.isEmpty()) {
-            List<Tag> queryTags = tags.stream().filter(tag -> tag.getName().contains(query)).toList();
-            queryTags.forEach(tag -> addTagWeight(tagsWeight, tag, postsCount, k));
+            tags.stream()
+                    .filter(tag -> tag.getName().contains(query))
+                    .forEach(this::addTagWeight);
         }
 
         if (query.isEmpty()) {
-            tags.forEach(tag -> addTagWeight(tagsWeight, tag, postsCount, k));
+            tags.forEach(this::addTagWeight);
         }
 
-        tagResponse.setTags(tagsWeight);
-
-        return tagResponse;
+        return new TagResponse(tagsWeight);
     }
 
-    private void addTagWeight(Set<TagWeight> tagsWeight, Tag tag, double postsCount, double ratio) {
+    private void addTagWeight(Tag tag) {
         int postsWithTagCount = tag.getPosts().size();
-        double normalizedTagWeight = normalizeTagWeight(postsWithTagCount, postsCount, ratio);
+        double normalizedTagWeight = normalizeTagWeight(postsWithTagCount);
         String tagName = tag.getName();
         tagsWeight.add(new TagWeight(tagName, normalizedTagWeight));
     }
 
-    private double normalizeTagWeight(double postsWithTagCount, double postsCount, double ratio) {
-        double tagWeight = calculateTagWeight(postsWithTagCount, postsCount);
-        return tagWeight * ratio;
+    private double normalizeTagWeight(double postsWithTagCount) {
+        double tagWeight = calculateTagWeight(postsWithTagCount);
+        return tagWeight * calculateTagRatio();
     }
 
-    private double calculateTagWeight(double postsWithTagCount, double postsCount) {
+    private double calculateTagWeight(double postsWithTagCount) {
         return postsWithTagCount / postsCount;
     }
 
-    private double calculateTagRatio(double postsWithTagMaxCount, double postsCount) {
-        return 1.0d / calculateTagWeight(postsWithTagMaxCount, postsCount);
+    private double calculateTagRatio() {
+        return 1.0d / calculateTagWeight(maxPostsCountInTags);
     }
 }

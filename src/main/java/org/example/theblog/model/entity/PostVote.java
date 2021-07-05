@@ -3,7 +3,7 @@ package org.example.theblog.model.entity;
 import lombok.Data;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -22,7 +22,7 @@ public class PostVote {
     private int post_id;
 
     @Column(nullable = false)
-    private Timestamp time;
+    private LocalDateTime time;
 
     @Column(nullable = false)
     private byte value;
