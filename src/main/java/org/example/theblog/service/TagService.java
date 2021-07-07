@@ -6,21 +6,14 @@ import org.example.theblog.model.repository.TagRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Service
 public class TagService {
-    record TagWeight(String name, double weight) {
-    }
-
-    public record TagResponse(Set<TagWeight> tags) {
-    }
-
     private final TagRepository tagRepository;
     private final int postsCount;
     private final Set<TagWeight> tagsWeight;
-    private final int maxPostsCountInTags;
+    private final Integer maxPostsCountInTags;
 
     public TagService(TagRepository tagRepository, PostRepository postRepository) {
         this.tagRepository = tagRepository;
@@ -30,17 +23,9 @@ public class TagService {
     }
 
     public TagResponse getTags(String query) {
-        List<Tag> tags = tagRepository.findAllTags();
-
-        if (!query.isEmpty()) {
-            tags.stream()
-                    .filter(tag -> tag.getName().contains(query))
-                    .forEach(this::addTagWeight);
-        }
-
-        if (query.isEmpty()) {
-            tags.forEach(this::addTagWeight);
-        }
+        tagRepository.findAllTags().stream()
+                .filter(tag -> query.isEmpty() || tag.getName().contains(query))
+                .forEach(this::addTagWeight);
 
         return new TagResponse(tagsWeight);
     }
@@ -63,5 +48,11 @@ public class TagService {
 
     private double calculateTagRatio() {
         return 1.0d / calculateTagWeight(maxPostsCountInTags);
+    }
+
+    record TagWeight(String name, double weight) {
+    }
+
+    public record TagResponse(Set<TagWeight> tags) {
     }
 }

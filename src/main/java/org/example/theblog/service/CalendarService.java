@@ -13,8 +13,6 @@ import java.util.Set;
 @AllArgsConstructor
 public class CalendarService {
 
-    public record CalendarResponse (Set<Integer> years, Map<String, Long> posts){}
-
     PostRepository postRepository;
 
     public CalendarResponse getCalendar(int year) {
@@ -22,5 +20,8 @@ public class CalendarService {
         postRepository.getYearsListList(year == 0 ? String.valueOf(LocalDate.now().getYear()) : String.valueOf(year))
                 .forEach(o -> postsMap.put(o.getData(), o.getCount()));
         return new CalendarResponse(postRepository.getYearsList(), postsMap);
+    }
+
+    public record CalendarResponse(Set<Integer> years, Map<String, Long> posts) {
     }
 }

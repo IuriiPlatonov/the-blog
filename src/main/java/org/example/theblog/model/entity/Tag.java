@@ -17,6 +17,6 @@ public class Tag {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "tags")
-    private List<TagToPost> posts;
+    @ManyToMany(mappedBy = "tags")
+    private List<Post> posts;
 }

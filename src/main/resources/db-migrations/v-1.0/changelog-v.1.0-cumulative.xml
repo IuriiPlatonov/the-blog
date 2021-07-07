@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
@@ -17,5 +17,6 @@
     <include file="30-06-21--16-post_comments-table-init.xml" relativeToChangelogFile="true"/>
     <include file="30-06-21--19-captcha_codes-table-init.xml" relativeToChangelogFile="true"/>
     <include file="30-06-21--22-global_settings-table-init.xml" relativeToChangelogFile="true"/>
+    <include file="07-07-21--01-hibernate_sequence-table-init.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

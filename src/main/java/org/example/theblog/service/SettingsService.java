@@ -12,8 +12,6 @@ import java.util.Map;
 @AllArgsConstructor
 public class SettingsService {
 
-    public record SettingsResponse(@JsonAnyGetter Map<String, Boolean> settingKeyValue){}
-
     private final GlobalSettingRepository globalSettingRepository;
 
     public SettingsResponse getGlobalSettings() {
@@ -22,5 +20,8 @@ public class SettingsService {
         globalSettingRepository.findAll().forEach(globalSetting ->
                 settingKeyValue.put(globalSetting.getCode(), globalSetting.getValue().equals("YES")));
         return new SettingsResponse(settingKeyValue);
+    }
+
+    public record SettingsResponse(@JsonAnyGetter Map<String, Boolean> settingKeyValue) {
     }
 }

@@ -9,8 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Set;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer> {
@@ -53,5 +53,23 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
            "WHERE function('date_format', c.time, '%Y') = :year " +
            "GROUP BY function('date_format', c.time, '%Y-%m-%d')")
     List<PostDateCountResponse> getYearsListList(@Param("year") String year);
+
+    @Query("select c from Post c " +
+           "where c.isActive = 1 and c.moderationStatus = 'ACCEPTED' and c.time < current_date " +
+           "and function('date_format', c.time, '%Y-%m-%d') = :date " +
+           "ORDER BY function('SIZE', c.postVotes) desc ")
+    Page<Post> findAllPostsByDate(@Param("date") String date, Pageable pageable);
+
+    @Query("select c from Post c " +
+           "Join c.tags t " +
+           "where c.isActive = 1 and c.moderationStatus = 'ACCEPTED' and c.time < current_date " +
+           "and t.name = :tag " +
+           "ORDER BY function('SIZE', c.postVotes) desc ")
+    Page<Post> findAllPostsByTag(@Param("tag") String tag, Pageable pageable);
+
+    @Query("select c from Post c " +
+           "where c.isActive = 1 and c.moderationStatus = 'ACCEPTED' and c.time < current_date  " +
+           "and c.id = :id")
+    Post getPostById(@Param("id") int id);
 }
 
