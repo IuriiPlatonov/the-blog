@@ -5,14 +5,14 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet id="8" author="Platonov">
+    <changeSet id="07-07-21--01-hibernate_sequence-table-init" author="Platonov">
         <sqlFile dbms="mysql"
                  encoding="utf8"
                  endDelimiter="\nGO"
                  relativeToChangelogFile="true"
                  splitStatements="true"
                  stripComments="true"
-                 path="30-06-21--23-global_settings-table-create.sql"/>
+                 path="07-07-21--02-hibernate_sequence-table-create.sql"/>
 
         <rollback>
             <sqlFile dbms="mysql"
@@ -21,7 +21,7 @@
                      relativeToChangelogFile="true"
                      splitStatements="true"
                      stripComments="true"
-                     path="30-06-21--24-global_settings-table-drop.sql"/>
+                     path="07-07-21--03-hibernate_sequence-table-drop.sql"/>
         </rollback>
     </changeSet>
 </databaseChangeLog>

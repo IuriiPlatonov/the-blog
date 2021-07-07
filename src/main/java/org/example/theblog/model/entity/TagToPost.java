@@ -13,11 +13,7 @@ public class TagToPost {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
-    @ManyToOne
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post posts;
+    private int post_id;
 
-    @ManyToOne()
-    @JoinColumn(name = "tag_id", nullable = false)
-    private Tag tags;
+    private int tag_id;
 }

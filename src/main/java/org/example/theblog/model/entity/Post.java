@@ -44,8 +44,11 @@ public class Post {
     @Column(name = "view_count", nullable = false)
     private int viewCount;
 
-    @OneToMany(mappedBy = "posts")
-    private List<TagToPost> tags;
+    @ManyToMany
+    @JoinTable(name = "tag2post",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private List<Tag> tags;
 
     @OneToMany(mappedBy = "post_id")
     private List<PostVote> postVotes;
