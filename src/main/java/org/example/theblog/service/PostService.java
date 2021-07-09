@@ -17,7 +17,8 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class PostService {
-    PostRepository postRepository;
+
+    private final PostRepository postRepository;
 
     public SmallViewPostResponse getPosts(int offset, int limit, String mode) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);

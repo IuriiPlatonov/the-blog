@@ -1,24 +1,36 @@
 package org.example.theblog.controllers;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.example.theblog.service.PostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+import java.security.Principal;
+
 @RestController
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping("/api")
 public class ApiPostController {
 
     private final PostService postService;
 
+    @PreAuthorize("hasAuthority('user:write')")
     @GetMapping("/post")
-    private ResponseEntity<PostService.SmallViewPostResponse> getPosts(@RequestParam int offset, int limit, String mode) {
-        return ResponseEntity.ok(postService.getPosts(offset, limit, mode));
+    private ResponseEntity<PostService.SmallViewPostResponse> getPosts(
+            @RequestParam int offset, int limit, String mode, Principal principal) {
+
+        System.out.println("Пост Сервис: " + postService);
+        System.out.println("принципал: " + principal);
+        return principal == null
+                ? ResponseEntity.status(HttpStatus.UNAUTHORIZED).location(URI.create("**/login")).build()
+                : ResponseEntity.ok(postService.getPosts(offset, limit, mode));
     }
 
     @GetMapping("/post/search")
+    @PreAuthorize("hasAuthority('user:moderate')")
     private ResponseEntity<PostService.SmallViewPostResponse> searchPosts(@RequestParam int offset, int limit, String query) {
         return ResponseEntity.ok(postService.searchPosts(offset, limit, query));
     }

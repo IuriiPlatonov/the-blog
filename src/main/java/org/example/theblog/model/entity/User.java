@@ -3,6 +3,7 @@ package org.example.theblog.model.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.example.theblog.config.Role;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -37,4 +38,8 @@ public class User {
 
     @Column(columnDefinition = "TEXT")
     private String photo;
+
+    public Role getRole() {
+        return isModerator == 0 ? Role.USER : Role.MODERATOR;
+    }
 }

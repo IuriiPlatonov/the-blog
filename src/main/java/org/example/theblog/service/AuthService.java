@@ -14,12 +14,18 @@ import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.CaptchaCodeRepository;
 import org.example.theblog.model.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.DatatypeConverter;
 import java.awt.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
@@ -34,13 +40,20 @@ import java.util.regex.Pattern;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private final AuthenticationManager authenticationManager;
     private final CaptchaCodeRepository captchaCodeRepository;
     private final UserRepository userRepository;
     @Value("${blog.timeToDeleteCaptchaCodeInMinutes}")
     private int time;
 
-    public AuthResponse getAuth() {
-        return new AuthResponse(false, null);
+    public AuthResponse getAuth(Principal principal) {
+        if (principal == null) {
+            return new AuthResponse(false, null);
+        } else {
+            return getAuthResponse(principal.getName());
+        }
+
     }
 
     public CaptchaResponse generateCaptcha() throws NoSuchAlgorithmException {
@@ -97,6 +110,31 @@ public class AuthService {
         return new RegisterResponse(errors.size() == 0, errors);
     }
 
+    public AuthService.AuthResponse login(AuthService.LoginRequest request) {
+        Authentication auth = authenticationManager
+                .authenticate(new UsernamePasswordAuthenticationToken(request.eMail(), request.password()));
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        org.springframework.security.core.userdetails.User userDetails = (org.springframework.security.core.userdetails.User) auth.getPrincipal();
+        return getAuthResponse(userDetails.getUsername());
+    }
+
+    private AuthResponse getAuthResponse(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException(email));
+
+        return new AuthResponse(true,
+                new AuthorizedUser(
+                        user.getId(),
+                        user.getName(),
+                        user.getPhoto(),
+                        user.getEmail(),
+                        user.getIsModerator() == 1,
+                        0,
+                        false
+
+                ));
+    }
+
     private String generateSecretCode(String code) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("MD5");
         md.update(code.getBytes());
@@ -143,5 +181,8 @@ public class AuthService {
 
     public record RegisterResponse(boolean result, /*@JsonAnyGetter*/ Map<String, String> errors) {
 
+    }
+
+    public record LoginRequest(@JsonProperty("e_mail") String eMail, String password) {
     }
 }
