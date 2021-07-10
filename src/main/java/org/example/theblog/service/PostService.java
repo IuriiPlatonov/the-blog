@@ -11,13 +11,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class PostService {
-    PostRepository postRepository;
+
+    private final PostRepository postRepository;
 
     public SmallViewPostResponse getPosts(int offset, int limit, String mode) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);
@@ -51,6 +53,18 @@ public class PostService {
     public FullViewPostResponse getPostsByID(int id) {
         Post post = postRepository.getPostById(id);
         return post == null ? null : createFullViewPostResponse(post);
+    }
+
+    public SmallViewPostResponse getMyPosts(int offset, int limit, String status, Principal principal) {
+        Pageable pageable = new OffsetLimitPageable(offset, limit);
+
+        String email = principal.getName();
+        return switch (status) {
+            case "inactive" -> createSmallViewPostResponse(postRepository.findMyInactivePosts(email, pageable));
+            case "pending" -> createSmallViewPostResponse(postRepository.findMyPendingPosts(email, pageable));
+            case "declined" -> createSmallViewPostResponse(postRepository.findMyDeclinedPosts(email, pageable));
+            default -> createSmallViewPostResponse(postRepository.findMyPublishedPosts(email, pageable));
+        };
     }
 
     private FullViewPostResponse createFullViewPostResponse(Post post) {
