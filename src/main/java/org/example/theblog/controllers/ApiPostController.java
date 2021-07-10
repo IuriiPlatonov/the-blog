@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.security.Principal;
 
 @RestController
@@ -17,39 +16,40 @@ public class ApiPostController {
 
     private final PostService postService;
 
-    @PreAuthorize("hasAuthority('user:write')")
     @GetMapping("/post")
-    private ResponseEntity<PostService.SmallViewPostResponse> getPosts(
-            @RequestParam int offset, int limit, String mode, Principal principal) {
-
-        System.out.println("Пост Сервис: " + postService);
-        System.out.println("принципал: " + principal);
-        return principal == null
-                ? ResponseEntity.status(HttpStatus.UNAUTHORIZED).location(URI.create("**/login")).build()
-                : ResponseEntity.ok(postService.getPosts(offset, limit, mode));
+    public ResponseEntity<PostService.SmallViewPostResponse> getPosts(
+            @RequestParam int offset, int limit, String mode) {
+        return ResponseEntity.ok(postService.getPosts(offset, limit, mode));
     }
 
     @GetMapping("/post/search")
-    @PreAuthorize("hasAuthority('user:moderate')")
-    private ResponseEntity<PostService.SmallViewPostResponse> searchPosts(@RequestParam int offset, int limit, String query) {
+    //  @PreAuthorize("hasAuthority('user:moderate')")
+    public ResponseEntity<PostService.SmallViewPostResponse> searchPosts(@RequestParam int offset, int limit, String query) {
         return ResponseEntity.ok(postService.searchPosts(offset, limit, query));
     }
 
     @GetMapping("/post/byDate")
-    private ResponseEntity<PostService.SmallViewPostResponse> searchPostsByDate(@RequestParam int offset, int limit, String date) {
+    public ResponseEntity<PostService.SmallViewPostResponse> searchPostsByDate(@RequestParam int offset, int limit, String date) {
         return ResponseEntity.ok(postService.getPostsByDate(offset, limit, date));
     }
 
     @GetMapping("/post/byTag")
-    private ResponseEntity<PostService.SmallViewPostResponse> searchPostsByTag(@RequestParam int offset, int limit, String tag) {
+    public ResponseEntity<PostService.SmallViewPostResponse> searchPostsByTag(@RequestParam int offset, int limit, String tag) {
         return ResponseEntity.ok(postService.getPostsByTag(offset, limit, tag));
     }
 
     @GetMapping("/post/{id}")
-    private ResponseEntity<PostService.FullViewPostResponse> getPostsByID(@PathVariable String id) {
+    public ResponseEntity<PostService.FullViewPostResponse> getPostsByID(@PathVariable String id) {
         PostService.FullViewPostResponse response = postService.getPostsByID(Integer.parseInt(id));
         return response == null
                 ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
                 : ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/post/my")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<PostService.SmallViewPostResponse> getMyPosts(
+            @RequestParam int offset, int limit, String status, Principal principal) {
+        return ResponseEntity.ok(postService.getMyPosts(offset, limit, status, principal));
     }
 }

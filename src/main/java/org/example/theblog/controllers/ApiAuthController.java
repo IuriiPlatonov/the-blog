@@ -19,22 +19,27 @@ public class ApiAuthController {
     }
 
     @GetMapping("/check")
-    private AuthService.AuthResponse settings(Principal principal) {
+    public AuthService.AuthResponse settings(Principal principal) {
         return authService.getAuth(principal);
     }
 
     @GetMapping("/captcha")
-    private AuthService.CaptchaResponse getCaptcha() throws NoSuchAlgorithmException {
+    public AuthService.CaptchaResponse getCaptcha() throws NoSuchAlgorithmException {
         return authService.generateCaptcha();
     }
 
     @PostMapping("/register")
-    private AuthService.RegisterResponse register(@RequestBody AuthService.RegisterRequest request) {
+    public AuthService.RegisterResponse register(@RequestBody AuthService.RegisterRequest request) {
         return authService.register(request);
     }
 
     @PostMapping("/login")
-    private ResponseEntity<AuthService.AuthResponse> login(@RequestBody AuthService.LoginRequest request) {
+    public ResponseEntity<AuthService.AuthResponse> login(@RequestBody AuthService.LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @GetMapping("/logout")
+    public ResponseEntity<AuthService.AuthResponse> logout() {
+        return ResponseEntity.ok(authService.logout());
     }
 }

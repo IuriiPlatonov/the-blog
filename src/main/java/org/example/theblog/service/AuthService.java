@@ -1,5 +1,6 @@
 package org.example.theblog.service;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.cage.Cage;
 import com.github.cage.image.ConstantColorGenerator;
@@ -118,6 +119,11 @@ public class AuthService {
         return getAuthResponse(userDetails.getUsername());
     }
 
+    public AuthResponse logout() {
+        SecurityContextHolder.clearContext();
+        return new AuthResponse(true, null);
+    }
+
     private AuthResponse getAuthResponse(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(email));
@@ -171,6 +177,7 @@ public class AuthService {
 
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public record AuthResponse(boolean result, AuthorizedUser user) {
     }
 
@@ -179,7 +186,7 @@ public class AuthService {
 
     }
 
-    public record RegisterResponse(boolean result, /*@JsonAnyGetter*/ Map<String, String> errors) {
+    public record RegisterResponse(boolean result, Map<String, String> errors) {
 
     }
 

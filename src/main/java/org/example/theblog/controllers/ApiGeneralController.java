@@ -19,22 +19,22 @@ public class ApiGeneralController {
     private final CalendarService calendarService;
 
     @GetMapping("/api/settings")
-    private SettingsService.SettingsResponse getSettings() {
+    public SettingsService.SettingsResponse getSettings() {
         return settingsService.getGlobalSettings();
     }
 
     @GetMapping("/api/init")
-    private InitResponse init() {
+    public InitResponse init() {
         return initResponse;
     }
 
     @GetMapping("/api/tag")
-    private TagService.TagResponse getTags() {
+    public TagService.TagResponse getTags() {
         return tagService.getTags("");
     }
 
     @GetMapping("/api/calendar")
-    private CalendarService.CalendarResponse getCalendar(@RequestParam int year) {
+    public CalendarService.CalendarResponse getCalendar(@RequestParam int year) {
         return calendarService.getCalendar(year);
     }
 }

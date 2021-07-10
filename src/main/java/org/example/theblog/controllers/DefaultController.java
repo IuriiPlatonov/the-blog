@@ -13,7 +13,7 @@ public class DefaultController {
         return "index";
     }
 
-    @RequestMapping(method = {RequestMethod.OPTIONS, RequestMethod.GET}, value = "/**/{:[^\\.]*}")
+    @RequestMapping(method = {RequestMethod.OPTIONS, RequestMethod.GET}, value = "/**/{:[^.]*}")
     public String redirectToIndex() {
         return "forward:/";
     }
