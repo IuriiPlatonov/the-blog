@@ -52,4 +52,10 @@ public class ApiPostController {
             @RequestParam int offset, int limit, String status, Principal principal) {
         return ResponseEntity.ok(postService.getMyPosts(offset, limit, status, principal));
     }
+
+    @PostMapping("/post")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<PostService.writePostErrorResponse> writePost(@RequestBody PostService.PostRequest request, Principal principal) {
+        return ResponseEntity.ok(postService.writePost(request, principal));
+    }
 }

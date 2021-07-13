@@ -15,6 +15,8 @@ import java.util.Set;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer> {
 
+    @Override
+    long count();
 
     @Query("select c from Post c " +
            "where c.isActive = 1 and c.moderationStatus = 'ACCEPTED' and c.time < current_date  " +

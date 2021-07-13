@@ -1,25 +1,29 @@
 package org.example.theblog.service;
 
 import lombok.AllArgsConstructor;
-import org.example.theblog.model.entity.Post;
-import org.example.theblog.model.entity.PostComment;
-import org.example.theblog.model.entity.PostVote;
-import org.example.theblog.model.entity.Tag;
+import org.example.theblog.model.entity.*;
 import org.example.theblog.model.repository.OffsetLimitPageable;
 import org.example.theblog.model.repository.PostRepository;
+import org.example.theblog.model.repository.TagRepository;
+import org.example.theblog.model.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
 public class PostService {
 
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
+    private final TagRepository tagRepository;
 
     public SmallViewPostResponse getPosts(int offset, int limit, String mode) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);
@@ -144,6 +148,51 @@ public class PostService {
                 .count();
     }
 
+    public writePostErrorResponse writePost(PostRequest request, Principal principal) {
+        Map<String, String> errors = new HashMap<>();
+
+        if (request.title.isBlank()) {
+            errors.put("title", "Заголовок не установлен");
+        }
+
+        if (request.title.length() < 4) {
+            errors.put("title", "Заголовок слишком короткий");
+        }
+
+        if (request.text.isBlank()) {
+            errors.put("text", "Текст публикации не установлен");
+        }
+
+        if (request.text.length() < 51) {
+            errors.put("text", "Текст публикации слишком короткий");
+        }
+
+        if (errors.size() == 0) {
+            Post post = new Post();
+            post.setIsActive(request.active());
+            post.setModerationStatus(ModerationStatus.NEW);
+            post.setTime(request.timestamp() <= LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
+                    ? LocalDateTime.now()
+                    : LocalDateTime.ofEpochSecond(request.timestamp(), 0, ZoneOffset.UTC));
+            post.setTitle(request.title());
+            post.setText(request.text());
+            post.setUser(userRepository.findUsersByEmail(principal.getName()));
+            post.setTags(addTagsToPost(request.tags()));
+            postRepository.save(post);
+            System.out.println(request.timestamp() < LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) );
+        }
+        return new writePostErrorResponse(errors.size() == 0, errors);
+    }
+
+    private List<Tag> addTagsToPost(List<String> tagsNames) {
+        return tagsNames.stream()
+                .map(name -> tagRepository.findTagByName(name).orElse(new Tag(name)))
+                .peek(tag -> {
+                    if (tag.getId() == 0) tagRepository.save(tag);
+                })
+                .toList();
+    }
+
     record PostOwner(int id, String name) {
     }
 
@@ -158,11 +207,17 @@ public class PostService {
     record Comment(int id, long timestamp, String text, CommentOwner user) {
     }
 
+    public record writePostErrorResponse(boolean result, Map<String, String> errors) {
+    }
+
     public record SmallViewPostResponse(long count, List<UserPost> posts) {
     }
 
     public record FullViewPostResponse(int id, long timestamp, byte active, PostOwner user, String title, String text,
                                        long likeCount, long dislikeCount, int viewCount, List<Comment> comments,
                                        List<String> tags) {
+    }
+
+    public record PostRequest(long timestamp, byte active, String title, List<String> tags, String text) {
     }
 }
