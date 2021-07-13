@@ -179,7 +179,6 @@ public class PostService {
             post.setUser(userRepository.findUsersByEmail(principal.getName()));
             post.setTags(addTagsToPost(request.tags()));
             postRepository.save(post);
-            System.out.println(request.timestamp() < LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) );
         }
         return new writePostErrorResponse(errors.size() == 0, errors);
     }
