@@ -54,9 +54,19 @@ public class PostService {
         return createSmallViewPostResponse(postRepository.findAllPostsByTag(tag, pageable));
     }
 
-    public FullViewPostResponse getPostsByID(int id) {
+    public FullViewPostResponse getPostsByID(int id, Principal principal) {
+        if (principal != null) {
+            String email = principal.getName();
+            User user = userRepository.findUsersByEmail(email);
+            if ((user.getIsModerator() == 1 || postRepository.getById(id).getUser().getEmail().equals(email))) {
+                Post post = postRepository.getById(id);
+                return createFullViewPostResponse(post);
+            }
+        }
         Post post = postRepository.getPostById(id);
-        return post == null ? null : createFullViewPostResponse(post);
+        viewCountIncrement(post);
+
+        return createFullViewPostResponse(post);
     }
 
     public SmallViewPostResponse getMyPosts(int offset, int limit, String status, Principal principal) {
@@ -72,7 +82,6 @@ public class PostService {
     }
 
     private FullViewPostResponse createFullViewPostResponse(Post post) {
-        viewCountIncrement(post);
         return new FullViewPostResponse(
                 post.getId(),
                 post.getTime().toEpochSecond(ZoneOffset.UTC),
@@ -181,8 +190,7 @@ public class PostService {
             post.setTitle(request.title());
             post.setText(request.text());
             post.setTags(addTagsToPost(request.tags()));
-            //      System.out.println(addTagsToPost(request.tags()));
-            postRepository.save(post);
+            postRepository.flush();
 
         }
         return new writePostResponse(errors.size() == 0, errors);

@@ -39,11 +39,8 @@ public class ApiPostController {
     }
 
     @GetMapping("/post/{id}")
-    public ResponseEntity<PostService.FullViewPostResponse> getPostsByID(@PathVariable String id) {
-        PostService.FullViewPostResponse response = postService.getPostsByID(Integer.parseInt(id));
-        return response == null
-                ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
-                : ResponseEntity.ok(response);
+    public ResponseEntity<PostService.FullViewPostResponse> getPostsByID(@PathVariable int id, Principal principal) {
+        return ResponseEntity.ok(postService.getPostsByID(id, principal));
     }
 
     @GetMapping("/post/my")
