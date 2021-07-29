@@ -81,6 +81,44 @@ public class PostService {
         };
     }
 
+    public writePostResponse writePost(PostRequest request, Principal principal) {
+        Map<String, String> errors = checkErrors(request);
+
+        if (errors.size() == 0) {
+            Post post = new Post();
+            post.setIsActive(request.active());
+            post.setModerationStatus(ModerationStatus.NEW);
+            post.setTime(request.timestamp() <= LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
+                    ? LocalDateTime.now()
+                    : LocalDateTime.ofEpochSecond(request.timestamp(), 0, ZoneOffset.UTC));
+            post.setTitle(request.title());
+            post.setText(request.text());
+            post.setUser(userRepository.findUsersByEmail(principal.getName()));
+            post.setTags(addTagsToPost(request.tags()));
+            postRepository.save(post);
+        }
+        return new writePostResponse(errors.size() == 0, errors);
+    }
+
+    public writePostResponse editPost(PostRequest request, int id) {
+        Map<String, String> errors = checkErrors(request);
+
+        if (errors.size() == 0) {
+            Post post = postRepository.getById(id);
+            post.setIsActive(request.active());
+            post.setModerationStatus(ModerationStatus.ACCEPTED);
+            post.setTime(request.timestamp() <= LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
+                    ? LocalDateTime.now()
+                    : LocalDateTime.ofEpochSecond(request.timestamp(), 0, ZoneOffset.UTC));
+            post.setTitle(request.title());
+            post.setText(request.text());
+            post.setTags(addTagsToPost(request.tags()));
+            postRepository.flush();
+
+        }
+        return new writePostResponse(errors.size() == 0, errors);
+    }
+
     private FullViewPostResponse createFullViewPostResponse(Post post) {
         return new FullViewPostResponse(
                 post.getId(),
@@ -157,45 +195,6 @@ public class PostService {
                 .count();
     }
 
-    public writePostResponse writePost(PostRequest request, Principal principal) {
-        Map<String, String> errors = checkErrors(request);
-
-
-        if (errors.size() == 0) {
-            Post post = new Post();
-            post.setIsActive(request.active());
-            post.setModerationStatus(ModerationStatus.NEW);
-            post.setTime(request.timestamp() <= LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
-                    ? LocalDateTime.now()
-                    : LocalDateTime.ofEpochSecond(request.timestamp(), 0, ZoneOffset.UTC));
-            post.setTitle(request.title());
-            post.setText(request.text());
-            post.setUser(userRepository.findUsersByEmail(principal.getName()));
-            post.setTags(addTagsToPost(request.tags()));
-            postRepository.save(post);
-        }
-        return new writePostResponse(errors.size() == 0, errors);
-    }
-
-    public writePostResponse editPost(PostRequest request, int id) {
-        Map<String, String> errors = checkErrors(request);
-
-        if (errors.size() == 0) {
-            Post post = postRepository.getById(id);
-            post.setIsActive(request.active());
-            post.setModerationStatus(ModerationStatus.ACCEPTED);
-            post.setTime(request.timestamp() <= LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
-                    ? LocalDateTime.now()
-                    : LocalDateTime.ofEpochSecond(request.timestamp(), 0, ZoneOffset.UTC));
-            post.setTitle(request.title());
-            post.setText(request.text());
-            post.setTags(addTagsToPost(request.tags()));
-            postRepository.flush();
-
-        }
-        return new writePostResponse(errors.size() == 0, errors);
-    }
-
     private Map<String, String> checkErrors(PostRequest request) {
         Map<String, String> errors = new HashMap<>();
 
@@ -216,7 +215,6 @@ public class PostService {
         }
         return errors;
     }
-
 
     private List<Tag> addTagsToPost(List<String> tagsNames) {
         return tagsNames.stream()

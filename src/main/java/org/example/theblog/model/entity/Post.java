@@ -53,6 +53,6 @@ public class Post {
     @OneToMany(mappedBy = "post_id")
     private List<PostVote> postVotes;
 
-    @OneToMany(mappedBy = "post_id")
+    @OneToMany(mappedBy = "postId")
     private List<PostComment> postComments;
 }
