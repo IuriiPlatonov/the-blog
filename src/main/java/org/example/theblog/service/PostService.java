@@ -1,11 +1,9 @@
 package org.example.theblog.service;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import org.example.theblog.model.entity.*;
-import org.example.theblog.model.repository.OffsetLimitPageable;
-import org.example.theblog.model.repository.PostRepository;
-import org.example.theblog.model.repository.TagRepository;
-import org.example.theblog.model.repository.UserRepository;
+import org.example.theblog.model.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,14 +14,19 @@ import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 public class PostService {
 
+    private final byte LIKE = 1;
+    private final byte DISLIKE = -1;
+
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final TagRepository tagRepository;
+    private final PostVoteRepository postVoteRepository;
 
     public SmallViewPostResponse getPosts(int offset, int limit, String mode) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);
@@ -81,7 +84,7 @@ public class PostService {
         };
     }
 
-    public writePostResponse writePost(PostRequest request, Principal principal) {
+    public WritePostResponse writePost(PostRequest request, Principal principal) {
         Map<String, String> errors = checkErrors(request);
 
         if (errors.size() == 0) {
@@ -97,10 +100,10 @@ public class PostService {
             post.setTags(addTagsToPost(request.tags()));
             postRepository.save(post);
         }
-        return new writePostResponse(errors.size() == 0, errors);
+        return new WritePostResponse(errors.size() == 0, errors);
     }
 
-    public writePostResponse editPost(PostRequest request, int id) {
+    public WritePostResponse editPost(PostRequest request, int id) {
         Map<String, String> errors = checkErrors(request);
 
         if (errors.size() == 0) {
@@ -116,7 +119,58 @@ public class PostService {
             postRepository.flush();
 
         }
-        return new writePostResponse(errors.size() == 0, errors);
+        return new WritePostResponse(errors.size() == 0, errors);
+    }
+
+    public VotesResponse likePost(VotesRequest request, Principal principal) {
+        return updateVote(request, principal, LIKE);
+    }
+
+    public VotesResponse dislikePost(VotesRequest request, Principal principal) {
+        return updateVote(request, principal, DISLIKE);
+    }
+
+    private VotesResponse updateVote(VotesRequest request, Principal principal, byte vote) {
+        boolean result = true;
+        User user = userRepository.findUsersByEmail(principal.getName());
+        Optional<PostVote> postVote = postVoteRepository.findByPostIdAndUser(request.postId(), user);
+
+        if (postVote.isEmpty()) {
+            return new VotesResponse(saveVote(user, request, vote));
+        }
+
+        byte currentVote = postVote.get().getValue();
+        switch (vote) {
+            case DISLIKE -> {
+                if (currentVote >= 0) {
+                    currentVote = vote;
+                } else {
+                    result = false;
+                }
+            }
+            case LIKE -> {
+                if (currentVote <= 0) {
+                    currentVote = vote;
+                } else {
+                    result = false;
+                }
+            }
+        }
+
+        postVote.get().setValue(currentVote);
+        postVoteRepository.flush();
+
+        return new VotesResponse(result);
+    }
+
+    private boolean saveVote(User user, VotesRequest request, byte vote) {
+        PostVote newPostVote = new PostVote();
+        newPostVote.setUser(user);
+        newPostVote.setPostId(request.postId());
+        newPostVote.setTime(LocalDateTime.now());
+        newPostVote.setValue(vote);
+        postVoteRepository.save(newPostVote);
+        return true;
     }
 
     private FullViewPostResponse createFullViewPostResponse(Post post) {
@@ -239,7 +293,7 @@ public class PostService {
     record Comment(int id, long timestamp, String text, CommentOwner user) {
     }
 
-    public record writePostResponse(boolean result, Map<String, String> errors) {
+    public record WritePostResponse(boolean result, Map<String, String> errors) {
     }
 
     public record SmallViewPostResponse(long count, List<UserPost> posts) {
@@ -251,5 +305,11 @@ public class PostService {
     }
 
     public record PostRequest(long timestamp, byte active, String title, List<String> tags, String text) {
+    }
+
+    public record VotesResponse(boolean result) {
+    }
+
+    public record VotesRequest(@JsonProperty("post_id") int postId) {
     }
 }

@@ -50,7 +50,7 @@ public class Post {
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private List<Tag> tags;
 
-    @OneToMany(mappedBy = "post_id")
+    @OneToMany(mappedBy = "postId")
     private List<PostVote> postVotes;
 
     @OneToMany(mappedBy = "postId")

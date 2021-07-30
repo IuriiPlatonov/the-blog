@@ -51,13 +51,25 @@ public class ApiPostController {
 
     @PostMapping("/post")
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<PostService.writePostResponse> writePost(@RequestBody PostService.PostRequest request, Principal principal) {
+    public ResponseEntity<PostService.WritePostResponse> writePost(@RequestBody PostService.PostRequest request, Principal principal) {
         return ResponseEntity.ok(postService.writePost(request, principal));
     }
 
     @PutMapping("/post/{id}")
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<PostService.writePostResponse> editPost(@RequestBody PostService.PostRequest request, @PathVariable int id) {
+    public ResponseEntity<PostService.WritePostResponse> editPost(@RequestBody PostService.PostRequest request, @PathVariable int id) {
         return ResponseEntity.ok(postService.editPost(request, id));
+    }
+
+    @PostMapping("/post/like")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<PostService.VotesResponse> likePost(@RequestBody PostService.VotesRequest request, Principal principal) {
+        return ResponseEntity.ok(postService.likePost(request, principal));
+    }
+
+    @PostMapping("/post/dislike")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<PostService.VotesResponse> dislikePost(@RequestBody PostService.VotesRequest request, Principal principal) {
+        return ResponseEntity.ok(postService.dislikePost(request, principal));
     }
 }
