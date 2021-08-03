@@ -27,6 +27,10 @@ public class ImageService {
         String name = null;
         if (originalFilename != null) {
             String[] paths = originalFilename.split("\\.");
+            if (!paths[paths.length - 1].equals("png") && !paths[paths.length - 1].equals("jpg")){
+                errors.put("image", "Формат файла не соответсвует .jpg .png");
+                return new ImageResponse(null, false, errors);
+            }
             Path filepath = Paths.get("upload", originalFilename.hashCode()
                                                 + "." + paths[paths.length - 1]);
             name = filepath.toString();
