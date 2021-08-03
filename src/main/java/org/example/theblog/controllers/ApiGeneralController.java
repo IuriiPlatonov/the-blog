@@ -2,14 +2,12 @@ package org.example.theblog.controllers;
 
 import lombok.AllArgsConstructor;
 import org.example.theblog.api.response.InitResponse;
-import org.example.theblog.service.CalendarService;
-import org.example.theblog.service.CommentService;
-import org.example.theblog.service.SettingsService;
-import org.example.theblog.service.TagService;
+import org.example.theblog.service.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 
@@ -51,5 +49,17 @@ public class ApiGeneralController {
         return commentResponse.result()
                 ? ResponseEntity.ok(commentResponse)
                 : new ResponseEntity<>(commentResponse, HttpStatus.BAD_REQUEST);
+    }
+
+
+    @PostMapping("/api/image")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<?> postImage(
+            @RequestParam("image") MultipartFile file) {
+        ImageService.ImageResponse imageResponse = ImageService.postImage(file);
+        return imageResponse.result() == null
+                ? ResponseEntity.ok(imageResponse.filePath())
+                : new ResponseEntity<>(imageResponse, HttpStatus.BAD_REQUEST);
+
     }
 }
