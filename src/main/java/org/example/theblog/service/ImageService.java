@@ -31,32 +31,11 @@ public class ImageService {
 
         Map<String, String> result = new HashMap<>();
         try {
-            File newFile = File.createTempFile("image", null);
-            file.transferTo(newFile);
-            result = cloudinary.uploader().upload(newFile,
+            result = cloudinary.uploader().upload(file.getBytes(),
                     ObjectUtils.emptyMap());
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-//        String originalFilename = file.getOriginalFilename();
-//        String name = null;
-//        if (originalFilename != null) {
-//            String[] paths = originalFilename.split("\\.");
-//            if (!paths[paths.length - 1].equals("png") && !paths[paths.length - 1].equals("jpg")){
-//                errors.put("image", "Формат файла не соответсвует .jpg .png");
-//                return new ImageResponse(null, false, errors);
-//            }
-//            Path filepath = Paths.get("upload", originalFilename.hashCode()
-//                                                + "." + paths[paths.length - 1]);
-//            name = filepath.toString();
-//            errors.put(filepath.toString(), "");
-//            try {
-//                file.transferTo(filepath);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
 
         return new ImageResponse(result.get("url"), null, null);
     }
