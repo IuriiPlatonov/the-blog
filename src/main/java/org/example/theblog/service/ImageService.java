@@ -1,13 +1,14 @@
 package org.example.theblog.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,26 +24,41 @@ public class ImageService {
             return new ImageResponse(null, false, errors);
         }
 
-        String originalFilename = file.getOriginalFilename();
-        String name = null;
-        if (originalFilename != null) {
-            String[] paths = originalFilename.split("\\.");
-            if (!paths[paths.length - 1].equals("png") && !paths[paths.length - 1].equals("jpg")){
-                errors.put("image", "Формат файла не соответсвует .jpg .png");
-                return new ImageResponse(null, false, errors);
-            }
-            Path filepath = Paths.get("upload", originalFilename.hashCode()
-                                                + "." + paths[paths.length - 1]);
-            name = filepath.toString();
-            errors.put(filepath.toString(), "");
-            try {
-                file.transferTo(filepath);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
+                "cloud_name", "dcqba34wa",
+                "api_key", "654122142294935",
+                "api_secret", "_6XtFAbZ8mY37WSu6Tf2v6cgnPw"));
+
+        Map<String, String> result = new HashMap<>();
+        try {
+            File newFile = File.createTempFile("image", null);
+            file.transferTo(newFile);
+            result = cloudinary.uploader().upload(newFile,
+                    ObjectUtils.emptyMap());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        return new ImageResponse(name, null, null);
+//        String originalFilename = file.getOriginalFilename();
+//        String name = null;
+//        if (originalFilename != null) {
+//            String[] paths = originalFilename.split("\\.");
+//            if (!paths[paths.length - 1].equals("png") && !paths[paths.length - 1].equals("jpg")){
+//                errors.put("image", "Формат файла не соответсвует .jpg .png");
+//                return new ImageResponse(null, false, errors);
+//            }
+//            Path filepath = Paths.get("upload", originalFilename.hashCode()
+//                                                + "." + paths[paths.length - 1]);
+//            name = filepath.toString();
+//            errors.put(filepath.toString(), "");
+//            try {
+//                file.transferTo(filepath);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
+        return new ImageResponse(result.get("url"), null, null);
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
