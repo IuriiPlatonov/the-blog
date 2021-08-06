@@ -118,11 +118,19 @@ public class AuthService {
         User user = userRepository.findByEmail(request.eMail())
                 .orElse(null);
 
+        boolean isPasswordCorrect = false;
+
         if (user != null) {
+            isPasswordCorrect = new BCryptPasswordEncoder(12)
+                    .matches(request.password(), user.getPassword());
+        }
+
+        if (isPasswordCorrect) {
             Authentication auth = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(request.eMail(), request.password()));
             SecurityContextHolder.getContext().setAuthentication(auth);
             return getAuthResponse(user);
+
         }
 
         return getAuthResponse(null);
@@ -131,6 +139,39 @@ public class AuthService {
     public AuthResponse logout() {
         SecurityContextHolder.clearContext();
         return new AuthResponse(true, null);
+    }
+
+    public RegisterResponse password(CodeRequest request) {
+        Map<String, String> errors = new HashMap<>();
+
+        CaptchaCode captchaCode = captchaCodeRepository.findCaptchaCodeBySecretCode(request.captchaSecret())
+                .orElse(null);
+
+        if (captchaCode == null) {
+            errors.put("code", """
+                    Ссылка для восстановления пароля устарела.
+                    <a href=
+                    "/login/restore-password">Запросить ссылку снова</a>""");
+        }
+
+        if (request.password().length() < 6) {
+            errors.put("password", "Пароль короче 6-ти символов");
+        }
+
+        if (captchaCode != null && !request.captcha().equals(captchaCode.getCode())) {
+            errors.put("captcha", "Код с картинки введён неверно");
+        }
+
+        if (errors.size() == 0) {
+            User user = userRepository.findUsersByCode(request.code());
+            if (request.code().equals(user.getCode())) {
+                user.setPassword(new BCryptPasswordEncoder(12)
+                        .encode(request.password()));
+                userRepository.flush();
+            }
+        }
+
+        return new RegisterResponse(errors.size() == 0, errors);
     }
 
     private AuthResponse getAuthResponse(User user) {
@@ -174,7 +215,6 @@ public class AuthService {
                         null, rnd), 6, 2), rnd);
     }
 
-
     record AuthorizedUser(int id, String name, String photo, String email, boolean moderation, int moderationCount,
                           boolean settings) {
     }
@@ -189,6 +229,11 @@ public class AuthService {
 
     public record RegisterRequest(@JsonProperty("e_mail") String eMail, String password, String name, String captcha,
                                   @JsonProperty("captcha_secret") String captchaSecret) {
+
+    }
+
+    public record CodeRequest(String code, String password, String captcha,
+                              @JsonProperty("captcha_secret") String captchaSecret) {
 
     }
 

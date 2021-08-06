@@ -7,6 +7,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 
 @Repository
 public interface CaptchaCodeRepository extends JpaRepository<CaptchaCode, Integer> {
@@ -16,4 +18,6 @@ public interface CaptchaCodeRepository extends JpaRepository<CaptchaCode, Intege
 
     @Query("SELECT c.code from CaptchaCode c where c.code = :code")
     String findCode(@Param("code") String code);
+
+    Optional<CaptchaCode> findCaptchaCodeBySecretCode(String code);
 }
