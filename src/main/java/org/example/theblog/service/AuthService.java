@@ -13,13 +13,13 @@ import lombok.RequiredArgsConstructor;
 import org.example.theblog.model.entity.CaptchaCode;
 import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.CaptchaCodeRepository;
+import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +44,7 @@ import java.util.regex.Pattern;
 public class AuthService {
 
     private final AuthenticationManager authenticationManager;
+    private final PostRepository postRepository;
     private final CaptchaCodeRepository captchaCodeRepository;
     private final UserRepository userRepository;
     @Value("${blog.timeToDeleteCaptchaCodeInMinutes}")
@@ -53,7 +54,7 @@ public class AuthService {
         if (principal == null) {
             return new AuthResponse(false, null);
         } else {
-            return getAuthResponse(principal.getName());
+            return getAuthResponse(userRepository.findUsersByEmail(principal.getName()));
         }
 
     }
@@ -83,7 +84,7 @@ public class AuthService {
         Map<String, String> errors = new HashMap<>();
         Matcher badName = Pattern.compile("\\w").matcher(request.name());
 
-        if (userRepository.findUsersByEmail(request.eMail()) != null) {
+        if (userRepository.findByEmail(request.eMail()).isPresent()) {
             errors.put("email", "Этот e-mail уже зарегистрирован");
         }
 
@@ -114,11 +115,17 @@ public class AuthService {
     }
 
     public AuthService.AuthResponse login(AuthService.LoginRequest request) {
-        Authentication auth = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(request.eMail(), request.password()));
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        org.springframework.security.core.userdetails.User userDetails = (org.springframework.security.core.userdetails.User) auth.getPrincipal();
-        return getAuthResponse(userDetails.getUsername());
+        User user = userRepository.findByEmail(request.eMail())
+                .orElse(null);
+
+        if (user != null) {
+            Authentication auth = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(request.eMail(), request.password()));
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            return getAuthResponse(user);
+        }
+
+        return getAuthResponse(null);
     }
 
     public AuthResponse logout() {
@@ -126,21 +133,18 @@ public class AuthService {
         return new AuthResponse(true, null);
     }
 
-    private AuthResponse getAuthResponse(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(email));
-
-        return new AuthResponse(true,
+    private AuthResponse getAuthResponse(User user) {
+        return user != null
+                ? new AuthResponse(true,
                 new AuthorizedUser(
                         user.getId(),
                         user.getName(),
                         user.getPhoto(),
                         user.getEmail(),
                         user.getIsModerator() == 1,
-                        0,
-                        false
-
-                ));
+                        user.getIsModerator() == 1 ? postRepository.getPostCountByStatusNew() : 0,
+                        user.getIsModerator() == 1))
+                : new AuthResponse(false, null);
     }
 
     private String generateSecretCode(String code) throws NoSuchAlgorithmException {

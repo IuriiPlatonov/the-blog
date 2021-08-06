@@ -4,6 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
+import org.example.theblog.config.ImageConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,7 +16,9 @@ import java.util.Map;
 @AllArgsConstructor
 public class ImageService {
 
-    public static ImageResponse postImage(MultipartFile file) {
+    private final ImageConfig imageConfig;
+
+    public ImageResponse postImage(MultipartFile file) {
         Map<String, String> errors = new HashMap<>();
 
         if (file.isEmpty() || file.getSize() >= 1024 * 1024 * 4) {
@@ -23,10 +26,7 @@ public class ImageService {
             return new ImageResponse(null, false, errors);
         }
 
-        Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
-                "cloud_name", "dcqba34wa",
-                "api_key", "654122142294935",
-                "api_secret", "_6XtFAbZ8mY37WSu6Tf2v6cgnPw"));
+        Cloudinary cloudinary = imageConfig.getCloudinary();
 
         Map<String, String> result = new HashMap<>();
         try {
@@ -40,7 +40,7 @@ public class ImageService {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record ImageResponse(String filePath, Boolean result, Map<String, String> errors) {
+    public record ImageResponse(String url, Boolean result, Map<String, String> errors) {
 
     }
 }
