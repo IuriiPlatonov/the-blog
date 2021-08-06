@@ -31,10 +31,7 @@ public class MailService {
         if (user != null) {
             String code = new BCryptPasswordEncoder(12)
                     .encode(String.valueOf(Math.random() * 1_000_000)).replaceAll("/", "");
-            final String port = environment.getProperty("server.port");
-            System.out.println(Arrays.toString(environment.getDefaultProfiles()));
-            final String hostName = InetAddress.getLoopbackAddress().getHostAddress();
-            final String url = String.format("https://%s:%s", hostName, port);
+            final String url = "https://skillbox-the-blog.herokuapp.com";
             String text = String.format("Для восстановления пароля, " +
                                         "пройдите по этой ссылке: %s/login/change-password/%s", url, code);
             user.setCode(code);
