@@ -3,23 +3,22 @@ package org.example.theblog.service;
 import lombok.RequiredArgsConstructor;
 import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.UserRepository;
-import org.springframework.core.env.Environment;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.net.InetAddress;
-import java.util.Arrays;
 import java.util.Properties;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class MailService {
 
     private final UserRepository userRepository;
-    private final Environment environment;
+    @Value("${blog.hostAddress}")
+    private String url;
 
     public MailResponse restore(MailRequest request) {
         return sendMail(request.email());
@@ -29,9 +28,8 @@ public class MailService {
         User user = userRepository.findByEmail(recipient).orElse(null);
 
         if (user != null) {
-            String code = new BCryptPasswordEncoder(12)
-                    .encode(String.valueOf(Math.random() * 1_000_000)).replaceAll("/", "");
-            final String url = "https://skillbox-the-blog.herokuapp.com";
+            String code = UUID.randomUUID().toString();
+
             String text = String.format("Для восстановления пароля, " +
                                         "пройдите по этой ссылке: %s/login/change-password/%s", url, code);
             user.setCode(code);
