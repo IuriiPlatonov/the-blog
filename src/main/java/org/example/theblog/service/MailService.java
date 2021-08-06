@@ -33,7 +33,7 @@ public class MailService {
                     .encode(String.valueOf(Math.random() * 1_000_000)).replaceAll("/", "");
             final String port = environment.getProperty("server.port");
             System.out.println(Arrays.toString(environment.getDefaultProfiles()));
-            final String hostName = InetAddress.getLoopbackAddress().getHostName();
+            final String hostName = InetAddress.getLoopbackAddress().getHostAddress();
             final String url = String.format("https://%s:%s", hostName, port);
             String text = String.format("Для восстановления пароля, " +
                                         "пройдите по этой ссылке: %s/login/change-password/%s", url, code);
@@ -63,12 +63,9 @@ public class MailService {
         var properties = new Properties();
 
         properties.put("mail.smtp.auth", "true");
-
         properties.put("mail.smtp.ssl.enable", "true");
-      //  properties.put("mail.smtp.starttls.enable", "true");
         properties.put("mail.smtp.host", "smtp.gmail.com");
         properties.put("mail.smtp.port", "465");
-  //      properties.put("mail.smtp.port", "587");
         return properties;
     }
 
