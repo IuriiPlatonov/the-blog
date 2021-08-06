@@ -47,7 +47,6 @@ public class ApiAuthController {
         return ResponseEntity.ok(mailService.restore(request));
     }
 
-    //    POST /api/auth/password
     @PostMapping("/password")
     public ResponseEntity<AuthService.RegisterResponse> password(@RequestBody AuthService.CodeRequest request) {
         return ResponseEntity.ok(authService.password(request));

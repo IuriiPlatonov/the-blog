@@ -72,4 +72,11 @@ public class ApiPostController {
     public ResponseEntity<PostService.VotesResponse> dislikePost(@RequestBody PostService.VotesRequest request, Principal principal) {
         return ResponseEntity.ok(postService.dislikePost(request, principal));
     }
+
+    @GetMapping("/post/moderation")
+    @PreAuthorize("hasAuthority('user:moderate')")
+    public ResponseEntity<PostService.SmallViewPostResponse> getPostModeration(
+            @RequestParam int offset, int limit, String status, Principal principal) {
+        return ResponseEntity.ok(postService.getPostModeration(offset, limit, status, principal));
+    }
 }

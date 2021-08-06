@@ -91,7 +91,4 @@ public class ApiGeneralController {
             Principal principal) {
         return ResponseEntity.ok(profileService.editProfileWithPhoto(photo, removePhoto, name, email, password, principal));
     }
-//
-
-
 }

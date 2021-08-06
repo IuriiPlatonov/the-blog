@@ -72,6 +72,16 @@ public class PostService {
         return createFullViewPostResponse(post);
     }
 
+    public SmallViewPostResponse getPostModeration(int offset, int limit, String status, Principal principal) {
+        Pageable pageable = new OffsetLimitPageable(offset, limit);
+        String email = principal.getName();
+        return switch (status) {
+            case "new" -> createSmallViewPostResponse(postRepository.findNewPostForModeration(email, pageable));
+            case "declined" -> createSmallViewPostResponse(postRepository.findDeclinedPostForModeration(email, pageable));
+            default -> createSmallViewPostResponse(postRepository.findAcceptedPostForModeration(email, pageable));
+        };
+    }
+
     public SmallViewPostResponse getMyPosts(int offset, int limit, String status, Principal principal) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);
 

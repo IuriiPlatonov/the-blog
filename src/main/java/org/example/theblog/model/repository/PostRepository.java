@@ -95,7 +95,24 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     Page<Post> findMyPublishedPosts(@Param("email") String email, Pageable pageable);
 
     @Query("select function('count', c) from Post c " +
-           "where c.moderationStatus = 'NEW'")
+           "where c.isActive = 1 and c.moderationStatus = 'NEW'")
     int getPostCountByStatusNew();
+
+    @Query("select c from Post c " +
+           "where c.isActive = 1 and c.moderationStatus = 'NEW' " +
+           "ORDER BY c.time desc")
+    Page<Post> findNewPostForModeration(@Param("email") String email, Pageable pageable);
+
+    @Query("select c from Post c " +
+           "where c.isActive = 1 and " +
+           "c.moderationStatus = 'ACCEPTED' and c.moderator.email = :email " +
+           "ORDER BY c.time desc")
+    Page<Post> findAcceptedPostForModeration(@Param("email") String email, Pageable pageable);
+
+    @Query("select c from Post c " +
+           "where c.isActive = 1 and " +
+           "c.moderationStatus = 'DECLINED' and c.moderator.email = :email " +
+           "ORDER BY c.time desc")
+    Page<Post> findDeclinedPostForModeration(@Param("email") String email, Pageable pageable);
 }
 
