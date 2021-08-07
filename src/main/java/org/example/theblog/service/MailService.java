@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.mail.*;
@@ -20,8 +21,8 @@ public class MailService {
     @Value("${blog.hostAddress}")
     private String url;
 
-    public MailResponse restore(MailRequest request) {
-        return sendMail(request.email());
+    public ResponseEntity<MailResponse> restore(MailRequest request) {
+        return ResponseEntity.ok(sendMail(request.email()));
     }
 
     private MailResponse sendMail(String recipient) {

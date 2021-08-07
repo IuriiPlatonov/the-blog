@@ -7,6 +7,7 @@ import org.example.theblog.model.entity.Post;
 import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.UserRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -18,7 +19,7 @@ public class ModerationService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
-    public ModerationResponse postModeration(ModerationRequest request, Principal principal) {
+    public ResponseEntity<ModerationResponse> postModeration(ModerationRequest request, Principal principal) {
         Post post = postRepository.getById(request.id());
         User moderator = userRepository.findUsersByEmail(principal.getName());
 
@@ -36,7 +37,7 @@ public class ModerationService {
             }
         }
 
-        return new ModerationResponse(true);
+        return ResponseEntity.ok(new ModerationResponse(true));
     }
 
     public record ModerationResponse(boolean result) {

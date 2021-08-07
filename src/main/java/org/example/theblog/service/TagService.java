@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.theblog.model.entity.Tag;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.TagRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -21,17 +22,17 @@ public class TagService {
     private int maxPostsCountInTags;
 
 
-    public TagResponse getTags(String query) {
+    public ResponseEntity<TagResponse> getTags(String query) {
         maxPostsCountInTags = tagRepository.findMaxPostsCountInTags();
         postsCount = postRepository.count();
         tags = new HashMap<>();
         tagRepository.findAllTags().stream()
-                .filter(tag -> query.isEmpty() || tag.getName().contains(query))
+                .filter(tag -> query == null || tag.getName().contains(query))
                 .forEach(this::addTagWeight);
 
-        return new TagResponse(tags.entrySet().stream()
+        return ResponseEntity.ok(new TagResponse(tags.entrySet().stream()
                 .map((key) -> new TagWeight(key.getKey(), key.getValue()))
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toSet())));
     }
 
     private void addTagWeight(Tag tag) {

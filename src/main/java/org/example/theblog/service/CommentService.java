@@ -7,6 +7,8 @@ import org.example.theblog.model.entity.PostComment;
 import org.example.theblog.model.repository.PostCommentRepository;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.UserRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -22,7 +24,7 @@ public class CommentService {
     private final PostCommentRepository postCommentRepository;
     private final UserRepository userRepository;
 
-    public CommentResponse postComment(CommentRequest request, Principal principal) {
+    public ResponseEntity<?> postComment(CommentRequest request, Principal principal) {
         Map<String, String> errors = new HashMap<>();
         boolean result = true;
         Integer id = null;
@@ -36,7 +38,6 @@ public class CommentService {
         if (request.parentId() != null && !request.parentId().isBlank()
             && postCommentRepository.findById(Integer.parseInt(request.parentId())).isEmpty()) {
             result = false;
-            System.out.println("БЛОТ");
         }
 
         if (request.text().isBlank()) {
@@ -56,11 +57,14 @@ public class CommentService {
             id = postCommentRepository.save(postComment).getId();
 
         }
-        return new CommentResponse(id, result, errors);
+        return result
+                ? ResponseEntity.ok(id)
+                : new ResponseEntity<>(new CommentResponse(false, errors), HttpStatus.BAD_REQUEST);
+
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record CommentResponse(Integer id, Boolean result, Map<String, String> errors) {
+    public record CommentResponse(Boolean result, Map<String, String> errors) {
     }
 
     public record CommentRequest(@JsonProperty("parent_id") String parentId, @JsonProperty("post_id") String postId,

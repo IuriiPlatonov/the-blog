@@ -2,9 +2,9 @@ package org.example.theblog.config;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 public class ImageConfig {
 
     public Cloudinary getCloudinary() {

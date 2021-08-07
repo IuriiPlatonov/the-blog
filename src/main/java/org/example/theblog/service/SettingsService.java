@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import org.example.theblog.model.entity.GlobalSetting;
 import org.example.theblog.model.repository.GlobalSettingRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -17,19 +18,19 @@ public class SettingsService {
 
     private final GlobalSettingRepository globalSettingRepository;
 
-    public SettingsResponse getGlobalSettings() {
+    public ResponseEntity<SettingsResponse> getGlobalSettings() {
         Map<String, Boolean> settingKeyValue = new HashMap<>();
 
         globalSettingRepository.findAll().forEach(globalSetting ->
                 settingKeyValue.put(globalSetting.getCode(), globalSetting.getValue().equals("YES")));
-        return new SettingsResponse(settingKeyValue);
+        return ResponseEntity.ok(new SettingsResponse(settingKeyValue));
     }
 
     public void setGlobalSettings(SettingsRequest request) {
         List<GlobalSetting> globalSettings = globalSettingRepository.findAll();
 
-        for (GlobalSetting globalSetting : globalSettings){
-            switch (globalSetting.getCode()){
+        for (GlobalSetting globalSetting : globalSettings) {
+            switch (globalSetting.getCode()) {
                 case "MULTIUSER_MODE" -> globalSetting.setValue(request.multiuserMode() ? "YES" : "NO");
                 case "POST_PREMODERATION" -> globalSetting.setValue(request.postPremoderation() ? "YES" : "NO");
                 case "STATISTICS_IS_PUBLIC" -> globalSetting.setValue(request.statisticsIsPublic() ? "YES" : "NO");

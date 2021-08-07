@@ -22,14 +22,14 @@ public class StatisticsService {
     private final GlobalSettingRepository globalSettingRepository;
     private final UserRepository userRepository;
 
-    public StatisticsResponse getMyStatistics(Principal principal) {
+    public ResponseEntity<StatisticsResponse> getMyStatistics(Principal principal) {
         String email = principal.getName();
 
-        return new StatisticsResponse(postRepository.getMyPostCount(email).orElse(0L),
+        return ResponseEntity.ok(new StatisticsResponse(postRepository.getMyPostCount(email).orElse(0L),
                 postRepository.getMyLikeCount(email).orElse(0),
                 postRepository.getMyDislikeCount(email).orElse(0),
                 postRepository.getMyViewCount(email).orElse(0),
-                postRepository.getDateMyFirstPost(email).orElse(LocalDateTime.now()).toEpochSecond(ZoneOffset.UTC));
+                postRepository.getDateMyFirstPost(email).orElse(LocalDateTime.now()).toEpochSecond(ZoneOffset.UTC)));
     }
 
     public ResponseEntity<StatisticsResponse> getAllStatistics(Principal principal) {

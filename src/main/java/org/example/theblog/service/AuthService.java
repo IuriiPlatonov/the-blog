@@ -54,16 +54,16 @@ public class AuthService {
     @Value("${blog.timeToDeleteCaptchaCodeInMinutes}")
     private int time;
 
-    public AuthResponse getAuth(Principal principal) {
+    public ResponseEntity<AuthResponse> getAuth(Principal principal) {
         if (principal == null) {
-            return new AuthResponse(false, null);
+            return ResponseEntity.ok(new AuthResponse(false, null));
         } else {
-            return getAuthResponse(userRepository.findUsersByEmail(principal.getName()));
+            return ResponseEntity.ok(getAuthResponse(userRepository.findUsersByEmail(principal.getName())));
         }
 
     }
 
-    public CaptchaResponse generateCaptcha() throws NoSuchAlgorithmException {
+    public ResponseEntity<CaptchaResponse> generateCaptcha() throws NoSuchAlgorithmException {
         Cage cage = initCage();
         String code = cage.getTokenGenerator().next();
         String secretCode = generateSecretCode(code);
@@ -80,7 +80,8 @@ public class AuthService {
         service.schedule(() -> captchaCodeRepository.deleteCaptchaCodeBySecretCode(secretCode),
                 this.time, TimeUnit.MINUTES);
 
-        return new CaptchaResponse(secretCode, "data:image/png;base64, ".concat(encodedCaptchaPicture));
+        return ResponseEntity.ok(
+                new CaptchaResponse(secretCode, "data:image/png;base64, ".concat(encodedCaptchaPicture)));
     }
 
     public ResponseEntity<RegisterResponse> register(RegisterRequest request) {
@@ -122,7 +123,7 @@ public class AuthService {
         return ResponseEntity.ok(new RegisterResponse(errors.size() == 0, errors));
     }
 
-    public AuthService.AuthResponse login(AuthService.LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(AuthService.LoginRequest request) {
         User user = userRepository.findByEmail(request.eMail())
                 .orElse(null);
 
@@ -137,19 +138,19 @@ public class AuthService {
             Authentication auth = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(request.eMail(), request.password()));
             SecurityContextHolder.getContext().setAuthentication(auth);
-            return getAuthResponse(user);
+            return ResponseEntity.ok(getAuthResponse(user));
 
         }
 
-        return getAuthResponse(null);
+        return ResponseEntity.ok(getAuthResponse(null));
     }
 
-    public AuthResponse logout() {
+    public ResponseEntity<AuthResponse> logout() {
         SecurityContextHolder.clearContext();
-        return new AuthResponse(true, null);
+        return ResponseEntity.ok(new AuthResponse(true, null));
     }
 
-    public RegisterResponse password(CodeRequest request) {
+    public ResponseEntity<RegisterResponse> password(CodeRequest request) {
         Map<String, String> errors = new HashMap<>();
 
         CaptchaCode captchaCode = captchaCodeRepository.findCaptchaCodeBySecretCode(request.captchaSecret())
@@ -179,7 +180,7 @@ public class AuthService {
             }
         }
 
-        return new RegisterResponse(errors.size() == 0, errors);
+        return ResponseEntity.ok(new RegisterResponse(errors.size() == 0, errors));
     }
 
     private AuthResponse getAuthResponse(User user) {

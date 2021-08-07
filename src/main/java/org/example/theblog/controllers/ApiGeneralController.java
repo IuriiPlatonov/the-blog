@@ -1,9 +1,7 @@
 package org.example.theblog.controllers;
 
 import lombok.AllArgsConstructor;
-import org.example.theblog.api.response.InitResponse;
 import org.example.theblog.service.*;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,7 +16,7 @@ public class ApiGeneralController {
 
     private final CommentService commentService;
     private final SettingsService settingsService;
-    private final InitResponse initResponse;
+    private final InitService initService;
     private final TagService tagService;
     private final CalendarService calendarService;
     private final ModerationService moderationService;
@@ -27,63 +25,54 @@ public class ApiGeneralController {
     private final StatisticsService statisticsService;
 
     @GetMapping("/api/settings")
-    public SettingsService.SettingsResponse getSettings() {
+    public ResponseEntity<SettingsService.SettingsResponse> getSettings() {
         return settingsService.getGlobalSettings();
     }
 
     @PutMapping("/api/settings")
-    public ResponseEntity<?> setSettings(@RequestBody SettingsService.SettingsRequest request) {
+    public void setSettings(@RequestBody SettingsService.SettingsRequest request) {
         settingsService.setGlobalSettings(request);
-        return ResponseEntity.ok(null);
     }
 
     @GetMapping("/api/init")
-    public InitResponse init() {
-        return initResponse;
+    public ResponseEntity<InitService.InitResponse> init() {
+        return initService.init();
     }
 
     @GetMapping("/api/tag")
-    public TagService.TagResponse getTags() {
-        return tagService.getTags("");
+    public ResponseEntity<TagService.TagResponse> getTags(@RequestParam(required = false) String query) {
+        return tagService.getTags(query);
     }
 
     @GetMapping("/api/calendar")
-    public CalendarService.CalendarResponse getCalendar(@RequestParam int year) {
+    public ResponseEntity<CalendarService.CalendarResponse> getCalendar(@RequestParam int year) {
         return calendarService.getCalendar(year);
     }
 
     @PostMapping("/api/comment")
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<CommentService.CommentResponse> postComment(
-            @RequestBody CommentService.CommentRequest request, Principal principal) {
-        CommentService.CommentResponse commentResponse = commentService.postComment(request, principal);
-        return commentResponse.result()
-                ? ResponseEntity.ok(commentResponse)
-                : new ResponseEntity<>(commentResponse, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<?> postComment(@RequestBody CommentService.CommentRequest request, Principal principal) {
+        return commentService.postComment(request, principal);
     }
 
     @PostMapping("/api/image")
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<?> postImage(
-            @RequestParam("image") MultipartFile file) {
-        ImageService.ImageResponse imageResponse = imageService.postImage(file);
-        return imageResponse.result() == null
-                ? ResponseEntity.ok(imageResponse.url())
-                : new ResponseEntity<>(imageResponse, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<?> postImage(@RequestParam("image") MultipartFile file) {
+        return imageService.postImage(file);
     }
 
     @PostMapping("/api/moderation")
     @PreAuthorize("hasAuthority('user:moderate')")
     public ResponseEntity<ModerationService.ModerationResponse> postModeration(
             @RequestBody ModerationService.ModerationRequest request, Principal principal) {
-        return ResponseEntity.ok(moderationService.postModeration(request, principal));
+        return moderationService.postModeration(request, principal);
     }
 
     @PostMapping(path = "/api/profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<ProfileService.ProfileResponse> editProfileWithoutPhoto(
             @RequestBody ProfileService.ProfileRequest request, Principal principal) {
-        return ResponseEntity.ok(profileService.editProfileWithoutPhoto(request, principal));
+        return profileService.editProfileWithoutPhoto(request, principal);
     }
 
     @PostMapping(path = "/api/profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -95,13 +84,13 @@ public class ApiGeneralController {
             @RequestParam String email,
             @RequestParam(required = false) String password,
             Principal principal) {
-        return ResponseEntity.ok(profileService.editProfileWithPhoto(photo, removePhoto, name, email, password, principal));
+        return profileService.editProfileWithPhoto(photo, removePhoto, name, email, password, principal);
     }
 
     @GetMapping("/api/statistics/my")
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<StatisticsService.StatisticsResponse> getMyStatistics(Principal principal) {
-        return ResponseEntity.ok(statisticsService.getMyStatistics(principal));
+        return statisticsService.getMyStatistics(principal);
     }
 
     @GetMapping("/api/statistics/all")
