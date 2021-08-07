@@ -14,8 +14,8 @@ import java.util.List;
 public class Post {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private int id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     @Column(name = "is_active", nullable = false)
     private byte isActive;
@@ -44,15 +44,15 @@ public class Post {
     @Column(name = "view_count", nullable = false)
     private int viewCount;
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.MERGE)
     @JoinTable(name = "tag2post",
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private List<Tag> tags;
 
-    @OneToMany(mappedBy = "post_id")
+    @OneToMany(mappedBy = "postId")
     private List<PostVote> postVotes;
 
-    @OneToMany(mappedBy = "post_id")
+    @OneToMany(mappedBy = "postId")
     private List<PostComment> postComments;
 }

@@ -11,14 +11,14 @@ import java.time.LocalDateTime;
 public class PostComment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @ManyToOne
     private PostComment parent;
 
-    @Column(nullable = false)
-    private int post_id;
+    @Column(name = "post_id", nullable = false)
+    private int postId;
 
     @ManyToOne
     @JoinColumn(nullable = false)

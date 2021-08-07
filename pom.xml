@@ -53,6 +53,12 @@
             <artifactId>mysql-connector-java</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.29.0</version>
+        </dependency>
         <!--liquibase-->
         <dependency>
             <groupId>org.liquibase</groupId>
@@ -64,6 +70,15 @@
             <artifactId>liquibase-maven-plugin</artifactId>
             <version>${liquibase.version}</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/javax.mail/mail -->
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>1.6.2</version>
+        </dependency>
+
+
         <!--//liquibase-->
 
         <!-- https://mvnrepository.com/artifact/com.github.cage/cage -->

@@ -13,13 +13,17 @@ import lombok.RequiredArgsConstructor;
 import org.example.theblog.model.entity.CaptchaCode;
 import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.CaptchaCodeRepository;
+import org.example.theblog.model.repository.GlobalSettingRepository;
+import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.DatatypeConverter;
@@ -43,21 +47,23 @@ import java.util.regex.Pattern;
 public class AuthService {
 
     private final AuthenticationManager authenticationManager;
+    private final PostRepository postRepository;
     private final CaptchaCodeRepository captchaCodeRepository;
     private final UserRepository userRepository;
+    private final GlobalSettingRepository globalSettingRepository;
     @Value("${blog.timeToDeleteCaptchaCodeInMinutes}")
     private int time;
 
-    public AuthResponse getAuth(Principal principal) {
+    public ResponseEntity<AuthResponse> getAuth(Principal principal) {
         if (principal == null) {
-            return new AuthResponse(false, null);
+            return ResponseEntity.ok(new AuthResponse(false, null));
         } else {
-            return getAuthResponse(principal.getName());
+            return ResponseEntity.ok(getAuthResponse(userRepository.findUsersByEmail(principal.getName())));
         }
 
     }
 
-    public CaptchaResponse generateCaptcha() throws NoSuchAlgorithmException {
+    public ResponseEntity<CaptchaResponse> generateCaptcha() throws NoSuchAlgorithmException {
         Cage cage = initCage();
         String code = cage.getTokenGenerator().next();
         String secretCode = generateSecretCode(code);
@@ -74,15 +80,20 @@ public class AuthService {
         service.schedule(() -> captchaCodeRepository.deleteCaptchaCodeBySecretCode(secretCode),
                 this.time, TimeUnit.MINUTES);
 
-        return new CaptchaResponse(secretCode, "data:image/png;base64, ".concat(encodedCaptchaPicture));
+        return ResponseEntity.ok(
+                new CaptchaResponse(secretCode, "data:image/png;base64, ".concat(encodedCaptchaPicture)));
     }
 
-    public RegisterResponse register(RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(RegisterRequest request) {
+
+        if (globalSettingRepository.findGlobalSettingByCode("MULTIUSER_MODE").getValue().equals("NO")) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
 
         Map<String, String> errors = new HashMap<>();
         Matcher badName = Pattern.compile("\\w").matcher(request.name());
 
-        if (userRepository.findUsersByEmail(request.eMail()) != null) {
+        if (userRepository.findByEmail(request.eMail()).isPresent()) {
             errors.put("email", "Этот e-mail уже зарегистрирован");
         }
 
@@ -104,41 +115,86 @@ public class AuthService {
             newUser.setIsModerator((byte) 0);
             newUser.setRegTime(LocalDateTime.now());
             newUser.setEmail(request.eMail());
-            newUser.setPassword(request.password());
+            newUser.setPassword(new BCryptPasswordEncoder(12)
+                    .encode(request.password()));
             userRepository.save(newUser);
         }
 
-        return new RegisterResponse(errors.size() == 0, errors);
+        return ResponseEntity.ok(new RegisterResponse(errors.size() == 0, errors));
     }
 
-    public AuthService.AuthResponse login(AuthService.LoginRequest request) {
-        Authentication auth = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(request.eMail(), request.password()));
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        org.springframework.security.core.userdetails.User userDetails = (org.springframework.security.core.userdetails.User) auth.getPrincipal();
-        return getAuthResponse(userDetails.getUsername());
+    public ResponseEntity<AuthResponse> login(AuthService.LoginRequest request) {
+        User user = userRepository.findByEmail(request.eMail())
+                .orElse(null);
+
+        boolean isPasswordCorrect = false;
+
+        if (user != null) {
+            isPasswordCorrect = new BCryptPasswordEncoder(12)
+                    .matches(request.password(), user.getPassword());
+        }
+
+        if (isPasswordCorrect) {
+            Authentication auth = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(request.eMail(), request.password()));
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            return ResponseEntity.ok(getAuthResponse(user));
+
+        }
+
+        return ResponseEntity.ok(getAuthResponse(null));
     }
 
-    public AuthResponse logout() {
+    public ResponseEntity<AuthResponse> logout() {
         SecurityContextHolder.clearContext();
-        return new AuthResponse(true, null);
+        return ResponseEntity.ok(new AuthResponse(true, null));
     }
 
-    private AuthResponse getAuthResponse(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(email));
+    public ResponseEntity<RegisterResponse> password(CodeRequest request) {
+        Map<String, String> errors = new HashMap<>();
 
-        return new AuthResponse(true,
+        CaptchaCode captchaCode = captchaCodeRepository.findCaptchaCodeBySecretCode(request.captchaSecret())
+                .orElse(null);
+
+        if (captchaCode == null) {
+            errors.put("code", """
+                    Ссылка для восстановления пароля устарела.
+                    <a href=
+                    "/login/restore-password">Запросить ссылку снова</a>""");
+        }
+
+        if (request.password().length() < 6) {
+            errors.put("password", "Пароль короче 6-ти символов");
+        }
+
+        if (captchaCode != null && !request.captcha().equals(captchaCode.getCode())) {
+            errors.put("captcha", "Код с картинки введён неверно");
+        }
+
+        if (errors.size() == 0) {
+            User user = userRepository.findUsersByCode(request.code());
+            if (request.code().equals(user.getCode())) {
+                user.setPassword(new BCryptPasswordEncoder(12)
+                        .encode(request.password()));
+                userRepository.flush();
+            }
+        }
+
+        return ResponseEntity.ok(new RegisterResponse(errors.size() == 0, errors));
+    }
+
+    private AuthResponse getAuthResponse(User user) {
+        return user != null
+                ? new AuthResponse(true,
                 new AuthorizedUser(
                         user.getId(),
                         user.getName(),
                         user.getPhoto(),
                         user.getEmail(),
                         user.getIsModerator() == 1,
-                        0,
-                        false
-
-                ));
+                        user.getIsModerator() == 1 ? postRepository.getPostCountByStatusNew() : 0,
+                        user.getIsModerator() == 1))
+                : new AuthResponse(false, null);
     }
 
     private String generateSecretCode(String code) throws NoSuchAlgorithmException {
@@ -168,7 +224,6 @@ public class AuthService {
                         null, rnd), 6, 2), rnd);
     }
 
-
     record AuthorizedUser(int id, String name, String photo, String email, boolean moderation, int moderationCount,
                           boolean settings) {
     }
@@ -183,6 +238,11 @@ public class AuthService {
 
     public record RegisterRequest(@JsonProperty("e_mail") String eMail, String password, String name, String captcha,
                                   @JsonProperty("captcha_secret") String captchaSecret) {
+
+    }
+
+    public record CodeRequest(String code, String password, String captcha,
+                              @JsonProperty("captcha_secret") String captchaSecret) {
 
     }
 
