@@ -24,6 +24,8 @@ public class ApiGeneralController {
     private final ModerationService moderationService;
     private final ProfileService profileService;
     private final ImageService imageService;
+    private final PostService postService;
+    private final StatisticsService statisticsService;
 
     @GetMapping("/api/settings")
     public SettingsService.SettingsResponse getSettings() {
@@ -90,5 +92,11 @@ public class ApiGeneralController {
             @RequestParam(required = false) String password,
             Principal principal) {
         return ResponseEntity.ok(profileService.editProfileWithPhoto(photo, removePhoto, name, email, password, principal));
+    }
+
+    @GetMapping("/api/statistics/my")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<StatisticsService.StatisticsResponse> getMyStatistics(Principal principal){
+        return ResponseEntity.ok(statisticsService.getMyStatistics(principal));
     }
 }

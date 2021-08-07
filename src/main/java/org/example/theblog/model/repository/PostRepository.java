@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -114,5 +115,27 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
            "c.moderationStatus = 'DECLINED' and c.moderator.email = :email " +
            "ORDER BY c.time desc")
     Page<Post> findDeclinedPostForModeration(@Param("email") String email, Pageable pageable);
+
+    @Query("select function('count', c) from Post c " +
+           "where c.user.email = :email")
+    int getMyPostCount(@Param("email") String email);
+
+    @Query("select function('count', c) from Post c " +
+           "Join c.postVotes t " +
+           "where t.value > 0 and c.user.email = :email")
+    int getMyLikeCount(@Param("email") String email);
+
+    @Query("select function('count', c) from Post c " +
+           "Join c.postVotes t " +
+           "where t.value < 0 and c.user.email = :email")
+    int getMyDislikeCount(@Param("email") String email);
+
+    @Query("select SUM(c.viewCount) from Post c " +
+           "where c.user.email = :email")
+    int getMyViewCount(@Param("email") String email);
+
+    @Query("select function('MIN', c.time) from Post c " +
+           "where c.user.email = :email")
+    LocalDateTime getDateMyFirstPost(@Param("email") String email);
 }
 
