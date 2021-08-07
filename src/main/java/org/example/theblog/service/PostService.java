@@ -27,6 +27,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final TagRepository tagRepository;
     private final PostVoteRepository postVoteRepository;
+    private final GlobalSettingRepository globalSettingRepository;
 
     public SmallViewPostResponse getPosts(int offset, int limit, String mode) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);
@@ -95,12 +96,15 @@ public class PostService {
     }
 
     public WritePostResponse writePost(PostRequest request, Principal principal) {
+        boolean isPostPremoderation = globalSettingRepository.
+                findGlobalSettingByCode("POST_PREMODERATION").getValue().equals("YES");
+
         Map<String, String> errors = checkErrors(request);
 
         if (errors.size() == 0) {
             Post post = new Post();
             post.setIsActive(request.active());
-            post.setModerationStatus(ModerationStatus.NEW);
+            post.setModerationStatus(isPostPremoderation ? ModerationStatus.NEW : ModerationStatus.ACCEPTED);
             post.setTime(request.timestamp() <= LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
                     ? LocalDateTime.now()
                     : LocalDateTime.ofEpochSecond(request.timestamp(), 0, ZoneOffset.UTC));

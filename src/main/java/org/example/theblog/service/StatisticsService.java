@@ -6,6 +6,8 @@ import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.GlobalSettingRepository;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.UserRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -30,20 +32,20 @@ public class StatisticsService {
                 postRepository.getDateMyFirstPost(email).orElse(LocalDateTime.now()).toEpochSecond(ZoneOffset.UTC));
     }
 
-    public StatisticsResponse getAllStatistics(Principal principal) {
+    public ResponseEntity<StatisticsResponse> getAllStatistics(Principal principal) {
         GlobalSetting globalSetting = globalSettingRepository.findGlobalSettingByCode("STATISTICS_IS_PUBLIC");
         if (principal != null) {
             User user = userRepository.findByEmail(principal.getName()).orElse(null);
             if (globalSetting.getValue().equals("NO") && user != null && user.getIsModerator() == 0) {
-                return null;
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
         }
 
-        return new StatisticsResponse(postRepository.count(),
+        return ResponseEntity.ok(new StatisticsResponse(postRepository.count(),
                 postRepository.getLikeCount().orElse(0),
                 postRepository.getDislikeCount().orElse(0),
                 postRepository.getViewCount().orElse(0),
-                postRepository.getDateFirstPost().orElse(LocalDateTime.now()).toEpochSecond(ZoneOffset.UTC));
+                postRepository.getDateFirstPost().orElse(LocalDateTime.now()).toEpochSecond(ZoneOffset.UTC)));
     }
 
 

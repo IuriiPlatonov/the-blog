@@ -13,9 +13,12 @@ import lombok.RequiredArgsConstructor;
 import org.example.theblog.model.entity.CaptchaCode;
 import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.CaptchaCodeRepository;
+import org.example.theblog.model.repository.GlobalSettingRepository;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -47,6 +50,7 @@ public class AuthService {
     private final PostRepository postRepository;
     private final CaptchaCodeRepository captchaCodeRepository;
     private final UserRepository userRepository;
+    private final GlobalSettingRepository globalSettingRepository;
     @Value("${blog.timeToDeleteCaptchaCodeInMinutes}")
     private int time;
 
@@ -79,7 +83,11 @@ public class AuthService {
         return new CaptchaResponse(secretCode, "data:image/png;base64, ".concat(encodedCaptchaPicture));
     }
 
-    public RegisterResponse register(RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(RegisterRequest request) {
+
+        if (globalSettingRepository.findGlobalSettingByCode("MULTIUSER_MODE").getValue().equals("NO")) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
 
         Map<String, String> errors = new HashMap<>();
         Matcher badName = Pattern.compile("\\w").matcher(request.name());
@@ -111,7 +119,7 @@ public class AuthService {
             userRepository.save(newUser);
         }
 
-        return new RegisterResponse(errors.size() == 0, errors);
+        return ResponseEntity.ok(new RegisterResponse(errors.size() == 0, errors));
     }
 
     public AuthService.AuthResponse login(AuthService.LoginRequest request) {

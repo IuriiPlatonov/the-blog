@@ -24,12 +24,17 @@ public class ApiGeneralController {
     private final ModerationService moderationService;
     private final ProfileService profileService;
     private final ImageService imageService;
-    private final PostService postService;
     private final StatisticsService statisticsService;
 
     @GetMapping("/api/settings")
     public SettingsService.SettingsResponse getSettings() {
         return settingsService.getGlobalSettings();
+    }
+
+    @PutMapping("/api/settings")
+    public ResponseEntity<?> setSettings(@RequestBody SettingsService.SettingsRequest request) {
+        settingsService.setGlobalSettings(request);
+        return ResponseEntity.ok(null);
     }
 
     @GetMapping("/api/init")
@@ -56,7 +61,6 @@ public class ApiGeneralController {
                 ? ResponseEntity.ok(commentResponse)
                 : new ResponseEntity<>(commentResponse, HttpStatus.BAD_REQUEST);
     }
-
 
     @PostMapping("/api/image")
     @PreAuthorize("hasAuthority('user:write')")
@@ -96,15 +100,12 @@ public class ApiGeneralController {
 
     @GetMapping("/api/statistics/my")
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<StatisticsService.StatisticsResponse> getMyStatistics(Principal principal){
+    public ResponseEntity<StatisticsService.StatisticsResponse> getMyStatistics(Principal principal) {
         return ResponseEntity.ok(statisticsService.getMyStatistics(principal));
     }
 
     @GetMapping("/api/statistics/all")
-    public ResponseEntity<StatisticsService.StatisticsResponse> getAllStatistics(Principal principal){
-        StatisticsService.StatisticsResponse response = statisticsService.getAllStatistics(principal);
-        return response != null
-                ? ResponseEntity.ok(response)
-                : new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<StatisticsService.StatisticsResponse> getAllStatistics(Principal principal) {
+        return statisticsService.getAllStatistics(principal);
     }
 }

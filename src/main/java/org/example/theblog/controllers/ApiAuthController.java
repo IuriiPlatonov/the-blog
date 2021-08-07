@@ -28,7 +28,7 @@ public class ApiAuthController {
     }
 
     @PostMapping("/register")
-    public AuthService.RegisterResponse register(@RequestBody AuthService.RegisterRequest request) {
+    public ResponseEntity<AuthService.RegisterResponse> register(@RequestBody AuthService.RegisterRequest request) {
         return authService.register(request);
     }
 
