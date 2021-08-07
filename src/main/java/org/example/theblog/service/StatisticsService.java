@@ -9,6 +9,7 @@ import org.example.theblog.model.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 @Service
@@ -22,11 +23,11 @@ public class StatisticsService {
     public StatisticsResponse getMyStatistics(Principal principal) {
         String email = principal.getName();
 
-        return new StatisticsResponse(postRepository.getMyPostCount(email),
-                postRepository.getMyLikeCount(email),
-                postRepository.getMyDislikeCount(email),
-                postRepository.getMyViewCount(email),
-                postRepository.getDateMyFirstPost(email).toEpochSecond(ZoneOffset.UTC));
+        return new StatisticsResponse(postRepository.getMyPostCount(email).orElse(0L),
+                postRepository.getMyLikeCount(email).orElse(0),
+                postRepository.getMyDislikeCount(email).orElse(0),
+                postRepository.getMyViewCount(email).orElse(0),
+                postRepository.getDateMyFirstPost(email).orElse(LocalDateTime.now()).toEpochSecond(ZoneOffset.UTC));
     }
 
     public StatisticsResponse getAllStatistics(Principal principal) {
@@ -39,13 +40,14 @@ public class StatisticsService {
         }
 
         return new StatisticsResponse(postRepository.count(),
-                postRepository.getLikeCount(),
-                postRepository.getDislikeCount(),
-                postRepository.getViewCount(),
-                postRepository.getDateFirstPost().toEpochSecond(ZoneOffset.UTC));
+                postRepository.getLikeCount().orElse(0),
+                postRepository.getDislikeCount().orElse(0),
+                postRepository.getViewCount().orElse(0),
+                postRepository.getDateFirstPost().orElse(LocalDateTime.now()).toEpochSecond(ZoneOffset.UTC));
     }
 
 
-    public record StatisticsResponse(long postsCount, int likesCount, int dislikesCount, int viewsCount, long firstPublication) {
+    public record StatisticsResponse(Long postsCount, Integer likesCount, Integer dislikesCount,
+                                     Integer viewsCount, Long firstPublication) {
     }
 }

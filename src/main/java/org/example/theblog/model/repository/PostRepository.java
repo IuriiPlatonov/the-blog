@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -118,40 +119,40 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
     @Query("select function('count', c) from Post c " +
            "where c.user.email = :email")
-    long getMyPostCount(@Param("email") String email);
+    Optional<Long> getMyPostCount(@Param("email") String email);
 
     @Query("select function('count', c) from Post c " +
            "Join c.postVotes t " +
            "where t.value > 0 and c.user.email = :email")
-    int getMyLikeCount(@Param("email") String email);
+    Optional<Integer> getMyLikeCount(@Param("email") String email);
 
     @Query("select function('count', c) from Post c " +
            "Join c.postVotes t " +
            "where t.value < 0 and c.user.email = :email")
-    int getMyDislikeCount(@Param("email") String email);
+    Optional<Integer> getMyDislikeCount(@Param("email") String email);
 
     @Query("select SUM(c.viewCount) from Post c " +
            "where c.user.email = :email")
-    int getMyViewCount(@Param("email") String email);
+    Optional<Integer> getMyViewCount(@Param("email") String email);
 
     @Query("select function('MIN', c.time) from Post c " +
            "where c.user.email = :email")
-    LocalDateTime getDateMyFirstPost(@Param("email") String email);
+    Optional<LocalDateTime> getDateMyFirstPost(@Param("email") String email);
 
     @Query("select function('count', c) from Post c " +
            "Join c.postVotes t " +
            "where t.value > 0")
-    int getLikeCount();
+    Optional<Integer> getLikeCount();
 
     @Query("select function('count', c) from Post c " +
            "Join c.postVotes t " +
            "where t.value < 0")
-    int getDislikeCount();
+    Optional<Integer> getDislikeCount();
 
     @Query("select SUM(c.viewCount) from Post c")
-    int getViewCount();
+    Optional<Integer> getViewCount();
 
     @Query("select function('MIN', c.time) from Post c")
-    LocalDateTime getDateFirstPost();
+    Optional<LocalDateTime> getDateFirstPost();
 }
 
