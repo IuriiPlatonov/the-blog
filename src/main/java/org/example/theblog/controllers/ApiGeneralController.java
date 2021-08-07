@@ -99,4 +99,12 @@ public class ApiGeneralController {
     public ResponseEntity<StatisticsService.StatisticsResponse> getMyStatistics(Principal principal){
         return ResponseEntity.ok(statisticsService.getMyStatistics(principal));
     }
+
+    @GetMapping("/api/statistics/all")
+    public ResponseEntity<StatisticsService.StatisticsResponse> getAllStatistics(Principal principal){
+        StatisticsService.StatisticsResponse response = statisticsService.getAllStatistics(principal);
+        return response != null
+                ? ResponseEntity.ok(response)
+                : new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    }
 }

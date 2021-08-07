@@ -118,7 +118,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
     @Query("select function('count', c) from Post c " +
            "where c.user.email = :email")
-    int getMyPostCount(@Param("email") String email);
+    long getMyPostCount(@Param("email") String email);
 
     @Query("select function('count', c) from Post c " +
            "Join c.postVotes t " +
@@ -137,5 +137,21 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     @Query("select function('MIN', c.time) from Post c " +
            "where c.user.email = :email")
     LocalDateTime getDateMyFirstPost(@Param("email") String email);
+
+    @Query("select function('count', c) from Post c " +
+           "Join c.postVotes t " +
+           "where t.value > 0")
+    int getLikeCount();
+
+    @Query("select function('count', c) from Post c " +
+           "Join c.postVotes t " +
+           "where t.value < 0")
+    int getDislikeCount();
+
+    @Query("select SUM(c.viewCount) from Post c")
+    int getViewCount();
+
+    @Query("select function('MIN', c.time) from Post c")
+    LocalDateTime getDateFirstPost();
 }
 
