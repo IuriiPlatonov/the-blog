@@ -48,7 +48,7 @@ public class ApiAuthController {
     }
 
     @PostMapping("/password")
-    public ResponseEntity<AuthService.RegisterResponse> password(@RequestBody AuthService.CodeRequest request) {
-        return authService.password(request);
+    public ResponseEntity<AuthService.RegisterResponse> changePassword(@RequestBody AuthService.CodeRequest request) {
+        return authService.changePassword(request);
     }
 }

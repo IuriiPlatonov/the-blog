@@ -57,10 +57,8 @@ public class AuthService {
     public ResponseEntity<AuthResponse> getAuth(Principal principal) {
         if (principal == null) {
             return ResponseEntity.ok(new AuthResponse(false, null));
-        } else {
-            return ResponseEntity.ok(getAuthResponse(userRepository.findUsersByEmail(principal.getName())));
         }
-
+        return ResponseEntity.ok(getAuthResponse(userRepository.findUsersByEmail(principal.getName())));
     }
 
     public ResponseEntity<CaptchaResponse> generateCaptcha() throws NoSuchAlgorithmException {
@@ -91,13 +89,13 @@ public class AuthService {
         }
 
         Map<String, String> errors = new HashMap<>();
-        Matcher badName = Pattern.compile("\\w").matcher(request.name());
+        Matcher goodName = Pattern.compile(".{3,30}").matcher(request.name());
 
         if (userRepository.findByEmail(request.eMail()).isPresent()) {
             errors.put("email", "Этот e-mail уже зарегистрирован");
         }
 
-        if (badName.find()) {
+        if (!goodName.matches()) {
             errors.put("name", "Имя указано неверно");
         }
 
@@ -123,7 +121,7 @@ public class AuthService {
         return ResponseEntity.ok(new RegisterResponse(errors.size() == 0, errors));
     }
 
-    public ResponseEntity<AuthResponse> login(AuthService.LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(LoginRequest request) {
         User user = userRepository.findByEmail(request.eMail())
                 .orElse(null);
 
@@ -150,7 +148,7 @@ public class AuthService {
         return ResponseEntity.ok(new AuthResponse(true, null));
     }
 
-    public ResponseEntity<RegisterResponse> password(CodeRequest request) {
+    public ResponseEntity<RegisterResponse> changePassword(CodeRequest request) {
         Map<String, String> errors = new HashMap<>();
 
         CaptchaCode captchaCode = captchaCodeRepository.findCaptchaCodeBySecretCode(request.captchaSecret())
