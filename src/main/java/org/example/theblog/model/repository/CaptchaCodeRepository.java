@@ -17,7 +17,7 @@ public interface CaptchaCodeRepository extends JpaRepository<CaptchaCode, Intege
     Integer deleteCaptchaCodeBySecretCode(String secretCode);
 
     @Query("SELECT c.code from CaptchaCode c where c.code = :code")
-    String findCode(@Param("code") String code);
+    Optional<String> findCode(@Param("code") String code);
 
     Optional<CaptchaCode> findCaptchaCodeBySecretCode(String code);
 }

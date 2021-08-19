@@ -26,30 +26,40 @@ public class CommentService {
 
     public ResponseEntity<?> postComment(CommentRequest request, Principal principal) {
         Map<String, String> errors = new HashMap<>();
+        boolean correctParentId = request.parentId() != null &&
+                                  request.parentId().matches("\\d+");
+
+        boolean wrongPostId = request.postId() == null ||
+                              !request.postId().matches("\\d+");
+
+        boolean emptyText = request.text().isBlank() ||
+                            request.text().matches("((&nbsp;)( )?)*");
+
+        int postId = wrongPostId ? 0 : Integer.parseInt(request.postId());
+        int parentId = correctParentId ? Integer.parseInt(request.parentId()) : 0;
         boolean result = true;
         Integer id = null;
 
-        if (request.postId() == null
-            || request.postId().isBlank()
-            || postRepository.findById(Integer.parseInt(request.postId())).isEmpty()) {
+        if (wrongPostId ||
+            postRepository.findById(postId).isEmpty()) {
             result = false;
         }
 
-        if (request.parentId() != null && !request.parentId().isBlank()
-            && postCommentRepository.findById(Integer.parseInt(request.parentId())).isEmpty()) {
+        if (correctParentId &&
+            postCommentRepository.findById(parentId).isEmpty()) {
             result = false;
         }
 
-        if (request.text().isBlank()) {
+        if (emptyText) {
             result = false;
             errors.put("text", "Текст комментария не задан или слишком короткий");
         }
 
         if (result) {
             PostComment postComment = new PostComment();
-            postComment.setPostId(Integer.parseInt(request.postId()));
-            if (request.parentId() != null) {
-                postComment.setParent(postCommentRepository.getById(Integer.parseInt(request.parentId())));
+            postComment.setPostId(postId);
+            if (correctParentId) {
+                postComment.setParent(postCommentRepository.getById(parentId));
             }
             postComment.setUser(userRepository.findUsersByEmail(principal.getName()));
             postComment.setTime(LocalDateTime.now());

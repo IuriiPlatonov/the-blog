@@ -21,8 +21,13 @@ public class SettingsService {
     public ResponseEntity<SettingsResponse> getGlobalSettings() {
         Map<String, Boolean> settingKeyValue = new HashMap<>();
 
-        globalSettingRepository.findAll().forEach(globalSetting ->
-                settingKeyValue.put(globalSetting.getCode(), globalSetting.getValue().equals("YES")));
+        List<GlobalSetting> globalSettings = globalSettingRepository.findAll();
+        for (GlobalSetting globalSetting : globalSettings) {
+            boolean enabled = globalSetting.getValue().equals("YES");
+            String mode = globalSetting.getCode();
+            settingKeyValue.put(mode, enabled);
+        }
+
         return ResponseEntity.ok(new SettingsResponse(settingKeyValue));
     }
 

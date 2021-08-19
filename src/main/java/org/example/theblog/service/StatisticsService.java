@@ -33,10 +33,14 @@ public class StatisticsService {
     }
 
     public ResponseEntity<StatisticsResponse> getAllStatistics(Principal principal) {
-        GlobalSetting globalSetting = globalSettingRepository.findGlobalSettingByCode("STATISTICS_IS_PUBLIC");
+
         if (principal != null) {
+            GlobalSetting globalSetting = globalSettingRepository.findGlobalSettingByCode("STATISTICS_IS_PUBLIC");
             User user = userRepository.findByEmail(principal.getName()).orElse(null);
-            if (globalSetting.getValue().equals("NO") && user != null && user.getIsModerator() == 0) {
+            boolean publicStatisticsDisable = globalSetting.getValue().equals("NO");
+            boolean userIsNotModerator = (user != null) && (user.getIsModerator() == 0);
+
+            if (publicStatisticsDisable && userIsNotModerator) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
         }
