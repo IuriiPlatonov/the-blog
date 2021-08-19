@@ -20,7 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ApiAuthServiceTest {
+public class AuthServiceTest {
 
     AuthenticationManager authenticationManager = Mockito.mock(AuthenticationManager.class);
     PostRepository postRepository = Mockito.mock(PostRepository.class);
@@ -81,7 +81,7 @@ public class ApiAuthServiceTest {
 
         Mockito.when(globalSettingRepository.findGlobalSettingByCode("MULTIUSER_MODE")).thenReturn(globalSetting);
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
-                thenReturn(String.valueOf(Optional.of("qwerty")));
+                thenReturn(Optional.of("qwerty"));
         Mockito.when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         assertEquals(Objects.requireNonNull(authService.register(registerRequest).getBody(),
                         "In the registerUserWithEmailDuplicateTest, the assertEquals 1st parameter is null").
@@ -102,7 +102,7 @@ public class ApiAuthServiceTest {
         Mockito.when(globalSettingRepository.findGlobalSettingByCode("MULTIUSER_MODE")).thenReturn(globalSetting);
 
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
-                thenReturn(String.valueOf(Optional.of("qwerty")));
+                thenReturn(Optional.of("qwerty"));
 
         assertEquals(Objects.requireNonNull(authService.register(registerRequest).getBody(),
                         "In the registerNameIsSmallTest, the assertEquals 1st parameter is null").errors(),
@@ -123,7 +123,7 @@ public class ApiAuthServiceTest {
         Mockito.when(globalSettingRepository.findGlobalSettingByCode("MULTIUSER_MODE")).thenReturn(globalSetting);
 
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
-                thenReturn(String.valueOf(Optional.of("qwerty")));
+                thenReturn(Optional.of("qwerty"));
 
         assertEquals(Objects.requireNonNull(authService.register(registerRequest).getBody(),
                         "In the registerNameIsLongTest, the assertEquals 1st parameter is null").errors(),
@@ -144,7 +144,7 @@ public class ApiAuthServiceTest {
         Mockito.when(globalSettingRepository.findGlobalSettingByCode("MULTIUSER_MODE")).thenReturn(globalSetting);
 
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
-                thenReturn(null);
+                thenReturn(Optional.empty());
 
         assertEquals(Objects.requireNonNull(authService.register(registerRequest).getBody(),
                         "In the registerUserWithBadCaptchaTest, the assertEquals 1st parameter is null").
@@ -165,7 +165,7 @@ public class ApiAuthServiceTest {
         Mockito.when(globalSettingRepository.findGlobalSettingByCode("MULTIUSER_MODE")).thenReturn(globalSetting);
 
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
-                thenReturn(String.valueOf(Optional.of("qwerty")));
+                thenReturn(Optional.of("qwerty"));
 
         assertEquals(Objects.requireNonNull(authService.register(registerRequest).getBody(),
                         "In the registerUserWithSmallPasswordTest, the assertEquals 1st parameter is null").
@@ -186,7 +186,7 @@ public class ApiAuthServiceTest {
         Mockito.when(globalSettingRepository.findGlobalSettingByCode("MULTIUSER_MODE")).thenReturn(globalSetting);
 
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
-                thenReturn(String.valueOf(Optional.of("qwerty")));
+                thenReturn(Optional.of("qwerty"));
 
         assertTrue(Objects.requireNonNull(authService.register(registerRequest).getBody(),
                         "In the registerUserWithSmallPasswordTest, the assertEquals 1st parameter is null").

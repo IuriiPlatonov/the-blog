@@ -56,7 +56,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
            "FROM Post c " +
            "WHERE function('date_format', c.time, '%Y') = :year " +
            "GROUP BY function('date_format', c.time, '%Y-%m-%d')")
-    List<PostDateCountResponse> getYearsListList(@Param("year") String year);
+    List<PostDateCountResponse> getPostsCountByDate(@Param("year") String year);
 
     @Query("select c from Post c " +
            "where c.isActive = 1 and c.moderationStatus = 'ACCEPTED' and c.time < current_date " +
@@ -74,7 +74,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     @Query("select c from Post c " +
            "where c.isActive = 1 and c.moderationStatus = 'ACCEPTED' and c.time < current_date  " +
            "and c.id = :id")
-    Post getPostById(@Param("id") int id);
+    Post getPostByIdForAllUser(@Param("id") int id);
 
     @Query("select c from Post c " +
            "where c.isActive = 0 and c.user.email = :email " +

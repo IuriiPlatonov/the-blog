@@ -32,15 +32,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -89,13 +84,13 @@ public class AuthService {
         }
 
         Map<String, String> errors = new HashMap<>();
-        Matcher goodName = Pattern.compile(".{3,30}").matcher(request.name());
+        boolean badName = !request.name().matches(".{3,30}");
 
         if (userRepository.findByEmail(request.eMail()).isPresent()) {
             errors.put("email", "Этот e-mail уже зарегистрирован");
         }
 
-        if (!goodName.matches()) {
+        if (badName) {
             errors.put("name", "Имя указано неверно");
         }
 
@@ -103,7 +98,7 @@ public class AuthService {
             errors.put("password", "Пароль короче 6-ти символов");
         }
 
-        if (captchaCodeRepository.findCode(request.captcha().toLowerCase()) == null) {
+        if (captchaCodeRepository.findCode(request.captcha().toLowerCase()).isEmpty()) {
             errors.put("captcha", "Код с картинки введён неверно");
         }
 
@@ -122,22 +117,20 @@ public class AuthService {
     }
 
     public ResponseEntity<AuthResponse> login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.eMail())
-                .orElse(null);
+        Optional<User> user = userRepository.findByEmail(request.eMail());
 
         boolean isPasswordCorrect = false;
 
-        if (user != null) {
+        if (user.isPresent()) {
             isPasswordCorrect = new BCryptPasswordEncoder(12)
-                    .matches(request.password(), user.getPassword());
+                    .matches(request.password(), user.get().getPassword());
         }
 
         if (isPasswordCorrect) {
             Authentication auth = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(request.eMail(), request.password()));
             SecurityContextHolder.getContext().setAuthentication(auth);
-            return ResponseEntity.ok(getAuthResponse(user));
-
+            return ResponseEntity.ok(getAuthResponse(user.get()));
         }
 
         return ResponseEntity.ok(getAuthResponse(null));
@@ -151,10 +144,9 @@ public class AuthService {
     public ResponseEntity<RegisterResponse> changePassword(CodeRequest request) {
         Map<String, String> errors = new HashMap<>();
 
-        CaptchaCode captchaCode = captchaCodeRepository.findCaptchaCodeBySecretCode(request.captchaSecret())
-                .orElse(null);
+        Optional<CaptchaCode> captchaCode = captchaCodeRepository.findCaptchaCodeBySecretCode(request.captchaSecret());
 
-        if (captchaCode == null) {
+        if (captchaCode.isEmpty()) {
             errors.put("code", """
                     Ссылка для восстановления пароля устарела.
                     <a href=
@@ -165,7 +157,7 @@ public class AuthService {
             errors.put("password", "Пароль короче 6-ти символов");
         }
 
-        if (captchaCode != null && !request.captcha().equals(captchaCode.getCode())) {
+        if (captchaCode.isPresent() && !request.captcha().equals(captchaCode.get().getCode())) {
             errors.put("captcha", "Код с картинки введён неверно");
         }
 

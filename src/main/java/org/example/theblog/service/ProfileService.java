@@ -15,8 +15,6 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +42,8 @@ public class ProfileService {
                 principal));
     }
 
-    private ProfileResponse editProfile(MultipartFile photo, int removePhoto, String name, String email, String password, Principal principal) {
+    private ProfileResponse editProfile(MultipartFile photo, int removePhoto, String name,
+                                        String email, String password, Principal principal) {
         Map<String, String> errors = new HashMap<>();
 
         User user = userRepository.findUsersByEmail(principal.getName());
@@ -65,17 +64,17 @@ public class ProfileService {
                 e.printStackTrace();
             }
             user.setPhoto(result.get("url"));
-        } else {
-            if (removePhoto == 1) {
-                user.setPhoto("");
-            }
         }
 
-        if (password != null && password.length() < 6) {
+        if (removePhoto == 1) {
+            user.setPhoto("");
+        }
+
+        if (password != null && (password.length() < 6 || password.isBlank())) {
             errors.put("password", "Пароль короче 6 символов");
         }
 
-        if (password != null) {
+        if (password != null && password.length() >= 6 && !password.isBlank()) {
             user.setPassword(new BCryptPasswordEncoder(12)
                     .encode(password));
         }
@@ -91,8 +90,8 @@ public class ProfileService {
         }
 
         if (name != null) {
-            Matcher badName = Pattern.compile("\\w").matcher(name);
-            if (badName.find()) {
+            boolean badName = !name.matches(".{3,30}");
+            if (badName) {
                 errors.put("name", "Имя указано неверно");
             } else {
                 user.setName(name);

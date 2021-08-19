@@ -17,10 +17,10 @@ public class CalendarService {
     PostRepository postRepository;
 
     public ResponseEntity<CalendarResponse> getCalendar(int year) {
-        Map<String, Long> postsMap = new HashMap<>();
-        postRepository.getYearsListList(year == 0 ? String.valueOf(LocalDate.now().getYear()) : String.valueOf(year))
-                .forEach(o -> postsMap.put(o.getData(), o.getCount()));
-        return ResponseEntity.ok(new CalendarResponse(postRepository.getYearsList(), postsMap));
+        Map<String, Long> dateByPostsCount = new HashMap<>();
+        postRepository.getPostsCountByDate(year == 0 ? String.valueOf(LocalDate.now().getYear()) : String.valueOf(year))
+                .forEach(o -> dateByPostsCount.put(o.getData(), o.getCount()));
+        return ResponseEntity.ok(new CalendarResponse(postRepository.getYearsList(), dateByPostsCount));
     }
 
     public record CalendarResponse(Set<Integer> years, Map<String, Long> posts) {

@@ -63,12 +63,16 @@ public class PostService {
         if (principal != null) {
             String email = principal.getName();
             User user = userRepository.findUsersByEmail(email);
-            if ((user.getIsModerator() == 1 || postRepository.getById(id).getUser().getEmail().equals(email))) {
+
+            boolean isOwner = postRepository.getById(id).getUser().getEmail().equals(email);
+            boolean isModerator = user.getIsModerator() == 1;
+
+            if ((isModerator || isOwner)) {
                 Post post = postRepository.getById(id);
                 return createFullViewPostResponse(post);
             }
         }
-        Post post = postRepository.getPostById(id);
+        Post post = postRepository.getPostByIdForAllUser(id);
         viewCountIncrement(post);
 
         return createFullViewPostResponse(post);
@@ -267,19 +271,19 @@ public class PostService {
     private Map<String, String> checkErrors(PostRequest request) {
         Map<String, String> errors = new HashMap<>();
 
-        if (request.title.isBlank()) {
+        if (request.title().isBlank()) {
             errors.put("title", "Заголовок не установлен");
         }
 
-        if (request.title.length() < 4) {
+        if (!request.title().isBlank() && request.title().length() < 4) {
             errors.put("title", "Заголовок слишком короткий");
         }
 
-        if (request.text.isBlank()) {
+        if (request.text().isBlank()) {
             errors.put("text", "Текст публикации не установлен");
         }
 
-        if (request.text.length() < 51) {
+        if (!request.text().isBlank() && request.text().length() < 51) {
             errors.put("text", "Текст публикации слишком короткий");
         }
         return errors;

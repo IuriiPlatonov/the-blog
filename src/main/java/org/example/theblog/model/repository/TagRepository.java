@@ -10,8 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface TagRepository extends JpaRepository<Tag, Integer> {
-    @Query("select c from Tag c")
-    List<Tag> findAllTags();
 
     @Query("select function('MAX', function('size' ,c.posts)) from Tag c")
     Integer findMaxPostsCountInTags();

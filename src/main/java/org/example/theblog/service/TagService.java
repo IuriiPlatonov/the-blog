@@ -1,14 +1,11 @@
 package org.example.theblog.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.theblog.model.entity.Tag;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.TagRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,29 +14,16 @@ import java.util.stream.Collectors;
 public class TagService {
     private final TagRepository tagRepository;
     private final PostRepository postRepository;
-    private long postsCount;
-    private Map<String, Double> tags;
-    private int maxPostsCountInTags;
-
 
     public ResponseEntity<TagResponse> getTags(String query) {
-        maxPostsCountInTags = tagRepository.findMaxPostsCountInTags();
-        postsCount = postRepository.count();
-        tags = new HashMap<>();
-        tagRepository.findAllTags().stream()
+
+        Set<TagWeight> tags = tagRepository.findAll()
+                .stream()
                 .filter(tag -> query == null || tag.getName().contains(query))
-                .forEach(this::addTagWeight);
+                .map(tag -> new TagWeight(tag.getName(), normalizeTagWeight(tag.getPosts().size())))
+                .collect(Collectors.toSet());
 
-        return ResponseEntity.ok(new TagResponse(tags.entrySet().stream()
-                .map((key) -> new TagWeight(key.getKey(), key.getValue()))
-                .collect(Collectors.toSet())));
-    }
-
-    private void addTagWeight(Tag tag) {
-        int postsWithTagCount = tag.getPosts().size();
-        double normalizedTagWeight = normalizeTagWeight(postsWithTagCount);
-        String tagName = tag.getName();
-        tags.put(tagName, normalizedTagWeight);
+        return ResponseEntity.ok(new TagResponse(tags));
     }
 
     private double normalizeTagWeight(double postsWithTagCount) {
@@ -48,14 +32,16 @@ public class TagService {
     }
 
     private double calculateTagWeight(double postsWithTagCount) {
+        long postsCount = postRepository.count();
         return postsWithTagCount / postsCount;
     }
 
     private double calculateTagRatio() {
+        int maxPostsCountInTags = tagRepository.findMaxPostsCountInTags();
         return 1.0d / calculateTagWeight(maxPostsCountInTags);
     }
 
-    record TagWeight(String name, double weight) {
+    public record TagWeight(String name, double weight) {
     }
 
     public record TagResponse(Set<TagWeight> tags) {
