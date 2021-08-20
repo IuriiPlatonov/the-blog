@@ -15,6 +15,7 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -26,10 +27,10 @@ public class CommentService {
 
     public ResponseEntity<?> postComment(CommentRequest request, Principal principal) {
         Map<String, String> errors = new HashMap<>();
-        boolean correctParentId = request.parentId() != null &&
+        boolean correctParentId = Objects.nonNull(request.parentId()) &&
                                   request.parentId().matches("\\d+");
 
-        boolean wrongPostId = request.postId() == null ||
+        boolean wrongPostId = Objects.isNull(request.postId()) ||
                               !request.postId().matches("\\d+");
 
         boolean emptyText = request.text().isBlank() ||

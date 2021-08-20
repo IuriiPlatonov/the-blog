@@ -12,10 +12,7 @@ import org.springframework.stereotype.Service;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -60,7 +57,7 @@ public class PostService {
     }
 
     public ResponseEntity<FullViewPostResponse> getPostsByID(int id, Principal principal) {
-        if (principal != null) {
+        if (Objects.nonNull(principal)) {
             String email = principal.getName();
             User user = userRepository.findUsersByEmail(email);
 

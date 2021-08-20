@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +35,7 @@ public class StatisticsService {
 
     public ResponseEntity<StatisticsResponse> getAllStatistics(Principal principal) {
 
-        if (principal != null) {
+        if (Objects.nonNull(principal)) {
             GlobalSetting globalSetting = globalSettingRepository.findGlobalSettingByCode("STATISTICS_IS_PUBLIC");
             User user = userRepository.findByEmail(principal.getName()).orElse(null);
             boolean publicStatisticsDisable = globalSetting.getValue().equals("NO");

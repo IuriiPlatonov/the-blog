@@ -6,6 +6,7 @@ import org.example.theblog.model.repository.TagRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,7 +20,7 @@ public class TagService {
 
         Set<TagWeight> tags = tagRepository.findAll()
                 .stream()
-                .filter(tag -> query == null || tag.getName().contains(query))
+                .filter(tag -> Objects.isNull(query) || tag.getName().contains(query))
                 .map(tag -> new TagWeight(tag.getName(), normalizeTagWeight(tag.getPosts().size())))
                 .collect(Collectors.toSet());
 

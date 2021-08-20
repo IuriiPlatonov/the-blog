@@ -50,7 +50,7 @@ public class AuthService {
     private int time;
 
     public ResponseEntity<AuthResponse> getAuth(Principal principal) {
-        if (principal == null) {
+        if (Objects.isNull(principal)) {
             return ResponseEntity.ok(new AuthResponse(false, null));
         }
         return ResponseEntity.ok(getAuthResponse(userRepository.findUsersByEmail(principal.getName())));

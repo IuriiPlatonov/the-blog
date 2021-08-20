@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -28,7 +29,7 @@ public class MailService {
     private MailResponse sendMail(String recipient) {
         User user = userRepository.findByEmail(recipient).orElse(null);
 
-        if (user != null) {
+        if (Objects.nonNull(user)) {
             String code = UUID.randomUUID().toString();
 
             String text = String.format("Для восстановления пароля, " +
@@ -52,7 +53,7 @@ public class MailService {
                 e.printStackTrace();
             }
         }
-        return user != null ? new MailResponse(true) : new MailResponse(false);
+        return Objects.nonNull(user) ? new MailResponse(true) : new MailResponse(false);
     }
 
     private Properties getProperties() {
