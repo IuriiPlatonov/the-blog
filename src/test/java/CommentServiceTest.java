@@ -1,3 +1,4 @@
+import org.example.theblog.exceptions.PostCommentException;
 import org.example.theblog.model.entity.Post;
 import org.example.theblog.model.entity.PostComment;
 import org.example.theblog.model.entity.User;
@@ -8,16 +9,16 @@ import org.example.theblog.service.CommentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.http.HttpStatus;
 
 import java.security.Principal;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 
 public class CommentServiceTest {
-
 
     PostCommentRepository postCommentRepository = Mockito.mock(PostCommentRepository.class);
     UserRepository userRepository = Mockito.mock(UserRepository.class);
@@ -53,9 +54,9 @@ public class CommentServiceTest {
         Mockito.when(postCommentRepository.save(any()))
                 .thenReturn(postComment);
 
-        HttpStatus expected = commentService.postComment(commentRequest, principal).getStatusCode();
+        int expected = commentService.postComment(commentRequest, principal);
 
-        assertEquals(expected, HttpStatus.OK);
+        assertEquals(expected, 0);
     }
 
     @Test
@@ -81,9 +82,8 @@ public class CommentServiceTest {
         Mockito.when(postCommentRepository.save(any()))
                 .thenReturn(postComment);
 
-        HttpStatus expected = commentService.postComment(commentRequest, principal).getStatusCode();
 
-        assertEquals(expected, HttpStatus.BAD_REQUEST);
+        assertThrows(PostCommentException.class, () -> commentService.postComment(commentRequest, principal));
     }
 
     @Test
@@ -109,9 +109,7 @@ public class CommentServiceTest {
         Mockito.when(postCommentRepository.save(any()))
                 .thenReturn(postComment);
 
-        HttpStatus expected = commentService.postComment(commentRequest, principal).getStatusCode();
-
-        assertEquals(expected, HttpStatus.BAD_REQUEST);
+        assertThrows(PostCommentException.class, () -> commentService.postComment(commentRequest, principal));
     }
 
     @Test
@@ -137,9 +135,15 @@ public class CommentServiceTest {
         Mockito.when(postCommentRepository.save(any()))
                 .thenReturn(postComment);
 
-        HttpStatus expected = commentService.postComment(commentRequest, principal).getStatusCode();
+        PostCommentException thrown = assertThrows(
+                PostCommentException.class,
+                () -> commentService.postComment(commentRequest, principal),
+                "wrong text"
+        );
 
-        assertEquals(expected, HttpStatus.BAD_REQUEST);
+        assertEquals(thrown.getCommentResponse().errors(),
+                Map.of("text", "Текст комментария не задан или слишком короткий"));
+
     }
 
 

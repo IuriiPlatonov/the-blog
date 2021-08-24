@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import org.example.theblog.model.entity.GlobalSetting;
 import org.example.theblog.model.repository.GlobalSettingRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -18,7 +17,7 @@ public class SettingsService {
 
     private final GlobalSettingRepository globalSettingRepository;
 
-    public ResponseEntity<SettingsResponse> getGlobalSettings() {
+    public SettingsResponse getGlobalSettings() {
         Map<String, Boolean> settingKeyValue = new HashMap<>();
 
         List<GlobalSetting> globalSettings = globalSettingRepository.findAll();
@@ -28,7 +27,7 @@ public class SettingsService {
             settingKeyValue.put(mode, enabled);
         }
 
-        return ResponseEntity.ok(new SettingsResponse(settingKeyValue));
+        return new SettingsResponse(settingKeyValue);
     }
 
     public void setGlobalSettings(SettingsRequest request) {

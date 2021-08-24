@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,8 +29,7 @@ public class SettingsServiceTest {
 
         Mockito.when(globalSettingRepository.findAll()).thenReturn(globalSettings);
 
-        assertTrue(Objects.requireNonNull(settingsService.getGlobalSettings().getBody(),
-                "In the getGlobalSettings, the assertTrue parameter is null").settingKeyValue().get("testOne"));
-        assertFalse(settingsService.getGlobalSettings().getBody().settingKeyValue().get("testTwo"));
+        assertTrue(settingsService.getGlobalSettings().settingKeyValue().get("testOne"));
+        assertFalse(settingsService.getGlobalSettings().settingKeyValue().get("testTwo"));
     }
 }

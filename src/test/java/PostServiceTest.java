@@ -10,7 +10,6 @@ import org.mockito.Mockito;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,8 +54,7 @@ public class PostServiceTest {
         Mockito.when(globalSettingRepository.findGlobalSettingByCode(any())).thenReturn(globalSetting);
         Mockito.when(userRepository.findUsersByEmail(any())).thenReturn(new User());
         Mockito.when(postRepository.save(any())).thenReturn(null);
-        assertTrue(Objects.requireNonNull(postService.writePost(request, principal).getBody(),
-                "In the writePostTest, the assertTrue parameter is null").result());
+        assertTrue(postService.writePost(request, principal).result());
     }
 
     @Test
@@ -68,9 +66,8 @@ public class PostServiceTest {
         Mockito.when(globalSettingRepository.findGlobalSettingByCode(any())).thenReturn(globalSetting);
         Mockito.when(userRepository.findUsersByEmail(any())).thenReturn(new User());
         Mockito.when(postRepository.save(any())).thenReturn(null);
-        assertEquals(Objects.requireNonNull(postService.writePost(request, principal).getBody(),
-                        "In the writePostWithoutTitleTest, the assertEquals parameter is null")
-                .errors(), Map.of("title", "Заголовок не установлен"));
+        assertEquals(postService.writePost(request, principal).errors(),
+                Map.of("title", "Заголовок не установлен"));
     }
 
     @Test
@@ -82,9 +79,8 @@ public class PostServiceTest {
         Mockito.when(globalSettingRepository.findGlobalSettingByCode(any())).thenReturn(globalSetting);
         Mockito.when(userRepository.findUsersByEmail(any())).thenReturn(new User());
         Mockito.when(postRepository.save(any())).thenReturn(null);
-        assertEquals(Objects.requireNonNull(postService.writePost(request, principal).getBody(),
-                        "In the writePostWithShortTitleTest, the assertEquals parameter is null")
-                .errors(), Map.of("title", "Заголовок слишком короткий"));
+        assertEquals(postService.writePost(request, principal).errors(),
+                Map.of("title", "Заголовок слишком короткий"));
     }
 
     @Test
@@ -96,9 +92,8 @@ public class PostServiceTest {
         Mockito.when(globalSettingRepository.findGlobalSettingByCode(any())).thenReturn(globalSetting);
         Mockito.when(userRepository.findUsersByEmail(any())).thenReturn(new User());
         Mockito.when(postRepository.save(any())).thenReturn(null);
-        assertEquals(Objects.requireNonNull(postService.writePost(request, principal).getBody(),
-                        "In the writePostWithEmptyTextTest, the assertEquals parameter is null")
-                .errors(), Map.of("text", "Текст публикации не установлен"));
+        assertEquals(postService.writePost(request, principal).errors(),
+                Map.of("text", "Текст публикации не установлен"));
     }
 
     @Test
@@ -110,9 +105,8 @@ public class PostServiceTest {
         Mockito.when(globalSettingRepository.findGlobalSettingByCode(any())).thenReturn(globalSetting);
         Mockito.when(userRepository.findUsersByEmail(any())).thenReturn(new User());
         Mockito.when(postRepository.save(any())).thenReturn(null);
-        assertEquals(Objects.requireNonNull(postService.writePost(request, principal).getBody(),
-                        "In the writePostWithShortTextTest, the assertEquals parameter is null")
-                .errors(), Map.of("text", "Текст публикации слишком короткий"));
+        assertEquals(postService.writePost(request, principal).errors(),
+                Map.of("text", "Текст публикации слишком короткий"));
     }
 
 }

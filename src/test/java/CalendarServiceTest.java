@@ -7,7 +7,6 @@ import org.mockito.Mockito;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -29,8 +28,8 @@ public class CalendarServiceTest {
         Mockito.when(postRepository.getPostsCountByDate(String.valueOf(LocalDate.now().getYear())))
                 .thenReturn(List.of(postDateCountResponse));
 
-        Long expected = Objects.requireNonNull(calendarService.getCalendar(0).getBody())
-                .posts().get(String.valueOf(LocalDate.now().getYear()));
+        Long expected = calendarService.getCalendar(0).posts().
+                get(String.valueOf(LocalDate.now().getYear()));
 
         assertEquals(expected, 2);
     }

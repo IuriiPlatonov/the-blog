@@ -3,9 +3,9 @@ package org.example.theblog.service;
 import lombok.RequiredArgsConstructor;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.TagRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -15,15 +15,15 @@ public class TagService {
     private final TagRepository tagRepository;
     private final PostRepository postRepository;
 
-    public ResponseEntity<TagResponse> getTags(String query) {
+    public TagResponse getTags(String query) {
 
         Set<TagWeight> tags = tagRepository.findAll()
                 .stream()
-                .filter(tag -> query == null || tag.getName().contains(query))
+                .filter(tag -> Objects.isNull(query) || tag.getName().contains(query))
                 .map(tag -> new TagWeight(tag.getName(), normalizeTagWeight(tag.getPosts().size())))
                 .collect(Collectors.toSet());
 
-        return ResponseEntity.ok(new TagResponse(tags));
+        return new TagResponse(tags);
     }
 
     private double normalizeTagWeight(double postsWithTagCount) {

@@ -2,7 +2,6 @@ package org.example.theblog.service;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 @Data
@@ -21,12 +20,12 @@ public class InitService {
     @Value("${blog.copyrightFrom}")
     private String copyrightFrom;
 
-    public ResponseEntity<InitResponse> init(){
-        return ResponseEntity.ok(new InitResponse(title, subtitle, phone, email, copyright, copyrightFrom));
+    public InitResponse init() {
+        return new InitResponse(title, subtitle, phone, email, copyright, copyrightFrom);
     }
 
     public record InitResponse(String title, String subtitle, String phone,
-                               String email, String copyright, String copyrightFrom){
+                               String email, String copyright, String copyrightFrom) {
 
     }
 }

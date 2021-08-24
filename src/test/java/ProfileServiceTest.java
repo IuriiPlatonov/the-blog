@@ -11,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,8 +31,7 @@ public class ProfileServiceTest {
                 "Tom", "test@test.com", "111111");
         Mockito.when(userRepository.findUsersByEmail(any())).thenReturn(new User());
 
-        assertTrue(Objects.requireNonNull(profileService.editProfileWithoutPhoto(request, principal).getBody(),
-                "In the editProfileWithoutPhotoTest, the assertTrue parameter is null").result());
+        assertTrue(profileService.editProfileWithoutPhoto(request, principal).result());
     }
 
     @Test
@@ -43,9 +41,8 @@ public class ProfileServiceTest {
                 "Tom", "test@test.com", "    ");
         Mockito.when(userRepository.findUsersByEmail(any())).thenReturn(new User());
 
-        assertEquals(Objects.requireNonNull(profileService.editProfileWithoutPhoto(request, principal).getBody(),
-                        "In the editProfileWithoutPhotoShortPasswordTest, the assertEquals parameter is null")
-                .errors(), Map.of("password", "Пароль короче 6 символов"));
+        assertEquals(profileService.editProfileWithoutPhoto(request, principal).errors(),
+                Map.of("password", "Пароль короче 6 символов"));
     }
 
     @Test
@@ -57,9 +54,8 @@ public class ProfileServiceTest {
         Mockito.when(principal.getName()).thenReturn("test");
         Mockito.when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(new User()));
 
-        assertEquals(Objects.requireNonNull(profileService.editProfileWithoutPhoto(request, principal).getBody(),
-                        "In the editProfileWithoutPhotoExistEmailTest, the assertEquals parameter is null")
-                .errors(), Map.of("email", "Этот e-mail уже зарегистрирован"));
+        assertEquals(profileService.editProfileWithoutPhoto(request, principal).errors(),
+                Map.of("email", "Этот e-mail уже зарегистрирован"));
     }
 
 
@@ -70,9 +66,8 @@ public class ProfileServiceTest {
                 "To", "test@test.com", "111111");
         Mockito.when(userRepository.findUsersByEmail(any())).thenReturn(new User());
 
-        assertEquals(Objects.requireNonNull(profileService.editProfileWithoutPhoto(request, principal).getBody(),
-                        "In the editProfileWithoutPhotoWrongNameTest, the assertEquals parameter is null")
-                .errors(), Map.of("name", "Имя указано неверно"));
+        assertEquals(profileService.editProfileWithoutPhoto(request, principal).errors(),
+                Map.of("name", "Имя указано неверно"));
     }
 
     @Test
@@ -85,9 +80,8 @@ public class ProfileServiceTest {
         Mockito.when(imageConfig.getCloudinary()).thenReturn(cloudinary);
         Mockito.when(cloudinary.uploader()).thenReturn(uploader);
 
-        assertTrue(Objects.requireNonNull(profileService.editProfileWithPhoto(file, 0, "Tom",
-                        "test@test.com", "111111", principal).getBody(),
-                "In the editProfileWithPhotoTest, the assertTrue parameter is null").result());
+        assertTrue(profileService.editProfileWithPhoto(file, 0, "Tom",
+                "test@test.com", "111111", principal).result());
     }
 
     @Test
@@ -99,9 +93,8 @@ public class ProfileServiceTest {
 
         Mockito.when(userRepository.findUsersByEmail(any())).thenReturn(new User());
 
-        assertEquals(Objects.requireNonNull(profileService.editProfileWithPhoto(file, 0, "Tom",
-                                "test@test.com", "111111", principal).getBody(),
-                        "In the editProfileWithEmptyPhotoTest, the assertEquals parameter is null")
-                .errors(), Map.of("photo", "Размер файла превышает допустимый размер"));
+        assertEquals(profileService.editProfileWithPhoto(file, 0, "Tom",
+                        "test@test.com", "111111", principal).errors(),
+                Map.of("photo", "Размер файла превышает допустимый размер"));
     }
 }

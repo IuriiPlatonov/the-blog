@@ -1,7 +1,11 @@
 package org.example.theblog.controllers;
 
 import lombok.AllArgsConstructor;
+import org.example.theblog.exceptions.PostCommentException;
+import org.example.theblog.exceptions.PostImageException;
+import org.example.theblog.exceptions.UserUnauthorizedException;
 import org.example.theblog.service.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,7 +30,7 @@ public class ApiGeneralController {
 
     @GetMapping("/api/settings")
     public ResponseEntity<SettingsService.SettingsResponse> getSettings() {
-        return settingsService.getGlobalSettings();
+        return ResponseEntity.ok(settingsService.getGlobalSettings());
     }
 
     @PutMapping("/api/settings")
@@ -36,43 +40,51 @@ public class ApiGeneralController {
 
     @GetMapping("/api/init")
     public ResponseEntity<InitService.InitResponse> init() {
-        return initService.init();
+        return ResponseEntity.ok(initService.init());
     }
 
     @GetMapping("/api/tag")
     public ResponseEntity<TagService.TagResponse> getTags(@RequestParam(required = false) String query) {
-        return tagService.getTags(query);
+        return ResponseEntity.ok(tagService.getTags(query));
     }
 
     @GetMapping("/api/calendar")
     public ResponseEntity<CalendarService.CalendarResponse> getCalendar(@RequestParam int year) {
-        return calendarService.getCalendar(year);
+        return ResponseEntity.ok(calendarService.getCalendar(year));
     }
 
     @PostMapping("/api/comment")
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<?> postComment(@RequestBody CommentService.CommentRequest request, Principal principal) {
-        return commentService.postComment(request, principal);
+        try {
+            return ResponseEntity.ok(commentService.postComment(request, principal));
+        } catch (PostCommentException e) {
+            return new ResponseEntity<>(e.getCommentResponse(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PostMapping("/api/image")
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<?> postImage(@RequestParam("image") MultipartFile file) {
-        return imageService.postImage(file);
+        try {
+            return ResponseEntity.ok(imageService.postImage(file));
+        } catch (PostImageException e) {
+            return new ResponseEntity<>(e.getCommentResponse(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PostMapping("/api/moderation")
     @PreAuthorize("hasAuthority('user:moderate')")
     public ResponseEntity<ModerationService.ModerationResponse> postModeration(
             @RequestBody ModerationService.ModerationRequest request, Principal principal) {
-        return moderationService.postModeration(request, principal);
+        return ResponseEntity.ok(moderationService.postModeration(request, principal));
     }
 
     @PostMapping(path = "/api/profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<ProfileService.ProfileResponse> editProfileWithoutPhoto(
             @RequestBody ProfileService.ProfileRequest request, Principal principal) {
-        return profileService.editProfileWithoutPhoto(request, principal);
+        return ResponseEntity.ok(profileService.editProfileWithoutPhoto(request, principal));
     }
 
     @PostMapping(path = "/api/profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -84,17 +96,22 @@ public class ApiGeneralController {
             @RequestParam String email,
             @RequestParam(required = false) String password,
             Principal principal) {
-        return profileService.editProfileWithPhoto(photo, removePhoto, name, email, password, principal);
+        return ResponseEntity.ok(
+                profileService.editProfileWithPhoto(photo, removePhoto, name, email, password, principal));
     }
 
     @GetMapping("/api/statistics/my")
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<StatisticsService.StatisticsResponse> getMyStatistics(Principal principal) {
-        return statisticsService.getMyStatistics(principal);
+        return ResponseEntity.ok(statisticsService.getMyStatistics(principal));
     }
 
     @GetMapping("/api/statistics/all")
     public ResponseEntity<StatisticsService.StatisticsResponse> getAllStatistics(Principal principal) {
-        return statisticsService.getAllStatistics(principal);
+        try {
+            return ResponseEntity.ok(statisticsService.getAllStatistics(principal));
+        } catch (UserUnauthorizedException e) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
     }
 }

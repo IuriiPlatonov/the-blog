@@ -7,10 +7,10 @@ import org.example.theblog.model.entity.Post;
 import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.UserRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -19,25 +19,29 @@ public class ModerationService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
-    public ResponseEntity<ModerationResponse> postModeration(ModerationRequest request, Principal principal) {
-        Post post = postRepository.getById(request.id());
-        User moderator = userRepository.findUsersByEmail(principal.getName());
+    public ModerationResponse postModeration(ModerationRequest request, Principal principal) {
+        Optional<Post> post = postRepository.findById(request.id());
+        Optional<User> moderator = userRepository.findByEmail(principal.getName());
 
-        switch (request.decision()){
-            case "accept" -> {
-                post.setModerationStatus(ModerationStatus.ACCEPTED);
-                post.setModerator(moderator);
-                postRepository.flush();
-            }
+        if (post.isPresent() &&
+            moderator.isPresent() &&
+            moderator.get().getIsModerator() == 1) {
+            switch (request.decision()) {
+                case "accept" -> {
+                    post.get().setModerationStatus(ModerationStatus.ACCEPTED);
+                    post.get().setModerator(moderator.get());
+                    postRepository.flush();
+                }
 
-            case "decline" -> {
-                post.setModerationStatus(ModerationStatus.DECLINED);
-                post.setModerator(moderator);
-                postRepository.flush();
+                case "decline" -> {
+                    post.get().setModerationStatus(ModerationStatus.DECLINED);
+                    post.get().setModerator(moderator.get());
+                    postRepository.flush();
+                }
             }
+            return new ModerationResponse(true);
         }
-
-        return ResponseEntity.ok(new ModerationResponse(true));
+        return new ModerationResponse(false);
     }
 
     public record ModerationResponse(boolean result) {

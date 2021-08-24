@@ -2,6 +2,7 @@ package org.example.theblog.model.repository;
 
 import org.example.theblog.api.response.PostDateCountResponse;
 import org.example.theblog.model.entity.Post;
+import org.example.theblog.model.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,8 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
     @Override
     long count();
+
+    Optional<Post> findById(int id);
 
     @Query("select c from Post c " +
            "where c.isActive = 1 and c.moderationStatus = 'ACCEPTED' and c.time < current_date  " +
@@ -48,7 +51,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
     @Query(value = "select YEAR(time) as year from posts c GROUP BY year",
             nativeQuery = true)
-    Set<Integer> getYearsList();
+    Set<Integer> getYearsSet();
 
     @Query("SELECT new org.example.theblog.api.response.PostDateCountResponse(" +
            "function('date_format', c.time, '%Y-%m-%d')," +

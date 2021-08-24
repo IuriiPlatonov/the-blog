@@ -6,16 +6,12 @@ import org.example.theblog.model.entity.*;
 import org.example.theblog.model.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -30,7 +26,7 @@ public class PostService {
     private final PostVoteRepository postVoteRepository;
     private final GlobalSettingRepository globalSettingRepository;
 
-    public ResponseEntity<SmallViewPostResponse> getPosts(int offset, int limit, String mode) {
+    public SmallViewPostResponse getPosts(int offset, int limit, String mode) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);
 
         return switch (mode) {
@@ -41,7 +37,7 @@ public class PostService {
         };
     }
 
-    public ResponseEntity<SmallViewPostResponse> searchPosts(int offset, int limit, String query) {
+    public SmallViewPostResponse searchPosts(int offset, int limit, String query) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);
         Page<Post> posts = postRepository.searchPageByQuery(query, pageable);
         return query.isBlank()
@@ -49,18 +45,18 @@ public class PostService {
                 : createSmallViewPostResponse(posts);
     }
 
-    public ResponseEntity<SmallViewPostResponse> getPostsByDate(int offset, int limit, String date) {
+    public SmallViewPostResponse getPostsByDate(int offset, int limit, String date) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);
         return createSmallViewPostResponse(postRepository.findAllPostsByDate(date, pageable));
     }
 
-    public ResponseEntity<SmallViewPostResponse> getPostsByTag(int offset, int limit, String tag) {
+    public SmallViewPostResponse getPostsByTag(int offset, int limit, String tag) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);
         return createSmallViewPostResponse(postRepository.findAllPostsByTag(tag, pageable));
     }
 
-    public ResponseEntity<FullViewPostResponse> getPostsByID(int id, Principal principal) {
-        if (principal != null) {
+    public FullViewPostResponse getPostsByID(int id, Principal principal) {
+        if (Objects.nonNull(principal)) {
             String email = principal.getName();
             User user = userRepository.findUsersByEmail(email);
 
@@ -78,7 +74,7 @@ public class PostService {
         return createFullViewPostResponse(post);
     }
 
-    public ResponseEntity<SmallViewPostResponse> getPostModeration(int offset, int limit, String status, Principal principal) {
+    public SmallViewPostResponse getPostModeration(int offset, int limit, String status, Principal principal) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);
         String email = principal.getName();
         return switch (status) {
@@ -88,7 +84,7 @@ public class PostService {
         };
     }
 
-    public ResponseEntity<SmallViewPostResponse> getMyPosts(int offset, int limit, String status, Principal principal) {
+    public SmallViewPostResponse getMyPosts(int offset, int limit, String status, Principal principal) {
         Pageable pageable = new OffsetLimitPageable(offset, limit);
 
         String email = principal.getName();
@@ -100,7 +96,7 @@ public class PostService {
         };
     }
 
-    public ResponseEntity<WritePostResponse> writePost(PostRequest request, Principal principal) {
+    public WritePostResponse writePost(PostRequest request, Principal principal) {
         boolean isPostPremoderation = globalSettingRepository.
                 findGlobalSettingByCode("POST_PREMODERATION").getValue().equals("YES");
 
@@ -119,10 +115,10 @@ public class PostService {
             post.setTags(addTagsToPost(request.tags()));
             postRepository.save(post);
         }
-        return ResponseEntity.ok(new WritePostResponse(errors.size() == 0, errors));
+        return new WritePostResponse(errors.size() == 0, errors);
     }
 
-    public ResponseEntity<WritePostResponse> editPost(PostRequest request, int id) {
+    public WritePostResponse editPost(PostRequest request, int id) {
         Map<String, String> errors = checkErrors(request);
 
         if (errors.size() == 0) {
@@ -138,24 +134,24 @@ public class PostService {
             postRepository.flush();
 
         }
-        return ResponseEntity.ok(new WritePostResponse(errors.size() == 0, errors));
+        return new WritePostResponse(errors.size() == 0, errors);
     }
 
-    public ResponseEntity<VotesResponse> likePost(VotesRequest request, Principal principal) {
+    public VotesResponse likePost(VotesRequest request, Principal principal) {
         return updateVote(request, principal, LIKE);
     }
 
-    public ResponseEntity<VotesResponse> dislikePost(VotesRequest request, Principal principal) {
+    public VotesResponse dislikePost(VotesRequest request, Principal principal) {
         return updateVote(request, principal, DISLIKE);
     }
 
-    private ResponseEntity<VotesResponse> updateVote(VotesRequest request, Principal principal, byte vote) {
+    private VotesResponse updateVote(VotesRequest request, Principal principal, byte vote) {
         boolean result = true;
         User user = userRepository.findUsersByEmail(principal.getName());
         Optional<PostVote> postVote = postVoteRepository.findByPostIdAndUser(request.postId(), user);
 
         if (postVote.isEmpty()) {
-            return ResponseEntity.ok(new VotesResponse(saveVote(user, request, vote)));
+            return new VotesResponse(saveVote(user, request, vote));
         }
 
         byte currentVote = postVote.get().getValue();
@@ -179,7 +175,7 @@ public class PostService {
         postVote.get().setValue(currentVote);
         postVoteRepository.flush();
 
-        return ResponseEntity.ok(new VotesResponse(result));
+        return new VotesResponse(result);
     }
 
     private boolean saveVote(User user, VotesRequest request, byte vote) {
@@ -192,8 +188,8 @@ public class PostService {
         return true;
     }
 
-    private ResponseEntity<FullViewPostResponse> createFullViewPostResponse(Post post) {
-        return ResponseEntity.ok(new FullViewPostResponse(
+    private FullViewPostResponse createFullViewPostResponse(Post post) {
+        return new FullViewPostResponse(
                 post.getId(),
                 post.getTime().toEpochSecond(ZoneOffset.UTC),
                 post.getIsActive(),
@@ -205,7 +201,7 @@ public class PostService {
                 getDislikeCount(post.getPostVotes()),
                 post.getViewCount(),
                 getComments(post.getPostComments()),
-                getTags(post.getTags())));
+                getTags(post.getTags()));
     }
 
     private void viewCountIncrement(Post post) {
@@ -213,8 +209,8 @@ public class PostService {
         postRepository.flush();
     }
 
-    private ResponseEntity<SmallViewPostResponse> createSmallViewPostResponse(Page<Post> posts) {
-        return ResponseEntity.ok(new SmallViewPostResponse(posts.getTotalElements(), getPosts(posts)));
+    private SmallViewPostResponse createSmallViewPostResponse(Page<Post> posts) {
+        return new SmallViewPostResponse(posts.getTotalElements(), getPosts(posts));
     }
 
     private List<UserPost> getPosts(Page<Post> list) {

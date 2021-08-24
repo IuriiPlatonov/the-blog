@@ -21,5 +21,11 @@ blog:
   email: platonov230388@gmail.com
   copyright: Юрий Платонов
   copyrightFrom: 2021
+  mailSmtpAuth: true
+  mailSmtpSslEnable: true
+  mailSmtpHost: smtp.gmail.com
+  mailSmtpPort: 465
+
+
 
 
