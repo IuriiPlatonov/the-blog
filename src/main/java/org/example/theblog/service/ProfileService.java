@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.theblog.config.ImageConfig;
 import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.UserRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,23 +23,24 @@ public class ProfileService {
     private final ImageConfig imageConfig;
     private final UserRepository userRepository;
 
-    public ResponseEntity<ProfileResponse> editProfileWithoutPhoto(ProfileRequest request, Principal principal) {
-        return ResponseEntity.ok(editProfile(
+    public ProfileResponse editProfileWithoutPhoto(ProfileRequest request, Principal principal) {
+        return editProfile(
                 null,
                 request.removePhoto(),
                 request.name(),
                 request.email(),
                 request.password(),
-                principal));
+                principal);
     }
 
-    public ResponseEntity<ProfileResponse> editProfileWithPhoto(MultipartFile photo, int removePhoto, String name, String email, String password, Principal principal) {
-        return ResponseEntity.ok(editProfile(photo,
+    public ProfileResponse editProfileWithPhoto(MultipartFile photo, int removePhoto, String name,
+                                                String email, String password, Principal principal) {
+        return editProfile(photo,
                 removePhoto,
                 name,
                 email,
                 password,
-                principal));
+                principal);
     }
 
     private ProfileResponse editProfile(MultipartFile photo, int removePhoto, String name,

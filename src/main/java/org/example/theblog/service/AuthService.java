@@ -10,6 +10,7 @@ import com.github.cage.image.ScaleConfig;
 import com.github.cage.token.RandomCharacterGeneratorFactory;
 import com.github.cage.token.RandomTokenGenerator;
 import lombok.RequiredArgsConstructor;
+import org.example.theblog.exceptions.MultiuserModeException;
 import org.example.theblog.model.entity.CaptchaCode;
 import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.CaptchaCodeRepository;
@@ -17,8 +18,6 @@ import org.example.theblog.model.repository.GlobalSettingRepository;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -49,14 +48,14 @@ public class AuthService {
     @Value("${blog.timeToDeleteCaptchaCodeInMinutes}")
     private int time;
 
-    public ResponseEntity<AuthResponse> getAuth(Principal principal) {
+    public AuthResponse getAuth(Principal principal) {
         if (Objects.isNull(principal)) {
-            return ResponseEntity.ok(new AuthResponse(false, null));
+            return new AuthResponse(false, null);
         }
-        return ResponseEntity.ok(getAuthResponse(userRepository.findUsersByEmail(principal.getName())));
+        return getAuthResponse(userRepository.findByEmail(principal.getName()));
     }
 
-    public ResponseEntity<CaptchaResponse> generateCaptcha() throws NoSuchAlgorithmException {
+    public CaptchaResponse generateCaptcha() throws NoSuchAlgorithmException {
         Cage cage = initCage();
         String code = cage.getTokenGenerator().next();
         String secretCode = generateSecretCode(code);
@@ -72,15 +71,14 @@ public class AuthService {
         ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         service.schedule(() -> captchaCodeRepository.deleteCaptchaCodeBySecretCode(secretCode),
                 this.time, TimeUnit.MINUTES);
-
-        return ResponseEntity.ok(
-                new CaptchaResponse(secretCode, "data:image/png;base64, ".concat(encodedCaptchaPicture)));
+//        deleteCaptchaCodeAfterOneHour();
+        return new CaptchaResponse(secretCode, "data:image/png;base64, ".concat(encodedCaptchaPicture));
     }
 
-    public ResponseEntity<RegisterResponse> register(RegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request) {
 
         if (globalSettingRepository.findGlobalSettingByCode("MULTIUSER_MODE").getValue().equals("NO")) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new MultiuserModeException();
         }
 
         Map<String, String> errors = new HashMap<>();
@@ -113,10 +111,10 @@ public class AuthService {
             userRepository.save(newUser);
         }
 
-        return ResponseEntity.ok(new RegisterResponse(errors.size() == 0, errors));
+        return new RegisterResponse(errors.size() == 0, errors);
     }
 
-    public ResponseEntity<AuthResponse> login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
         Optional<User> user = userRepository.findByEmail(request.eMail());
 
         boolean isPasswordCorrect = false;
@@ -130,18 +128,18 @@ public class AuthService {
             Authentication auth = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(request.eMail(), request.password()));
             SecurityContextHolder.getContext().setAuthentication(auth);
-            return ResponseEntity.ok(getAuthResponse(user.get()));
+            return getAuthResponse(user);
         }
 
-        return ResponseEntity.ok(getAuthResponse(null));
+        return getAuthResponse(Optional.empty());
     }
 
-    public ResponseEntity<AuthResponse> logout() {
+    public AuthResponse logout() {
         SecurityContextHolder.clearContext();
-        return ResponseEntity.ok(new AuthResponse(true, null));
+        return new AuthResponse(true, null);
     }
 
-    public ResponseEntity<RegisterResponse> changePassword(CodeRequest request) {
+    public RegisterResponse changePassword(CodeRequest request) {
         Map<String, String> errors = new HashMap<>();
 
         Optional<CaptchaCode> captchaCode = captchaCodeRepository.findCaptchaCodeBySecretCode(request.captchaSecret());
@@ -170,21 +168,20 @@ public class AuthService {
             }
         }
 
-        return ResponseEntity.ok(new RegisterResponse(errors.size() == 0, errors));
+        return new RegisterResponse(errors.size() == 0, errors);
     }
 
-    private AuthResponse getAuthResponse(User user) {
-        return user != null
-                ? new AuthResponse(true,
-                new AuthorizedUser(
-                        user.getId(),
-                        user.getName(),
-                        user.getPhoto(),
-                        user.getEmail(),
-                        user.getIsModerator() == 1,
-                        user.getIsModerator() == 1 ? postRepository.getPostCountByStatusNew() : 0,
-                        user.getIsModerator() == 1))
-                : new AuthResponse(false, null);
+    private AuthResponse getAuthResponse(Optional<User> user) {
+        return user.map(value -> new AuthResponse(true,
+                        new AuthorizedUser(
+                                value.getId(),
+                                value.getName(),
+                                value.getPhoto(),
+                                value.getEmail(),
+                                value.getIsModerator() == 1,
+                                value.getIsModerator() == 1 ? postRepository.getPostCountByStatusNew() : 0,
+                                value.getIsModerator() == 1)))
+                .orElseGet(() -> new AuthResponse(false, null));
     }
 
     private String generateSecretCode(String code) throws NoSuchAlgorithmException {

@@ -3,7 +3,6 @@ package org.example.theblog.service;
 import lombok.RequiredArgsConstructor;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.TagRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -16,7 +15,7 @@ public class TagService {
     private final TagRepository tagRepository;
     private final PostRepository postRepository;
 
-    public ResponseEntity<TagResponse> getTags(String query) {
+    public TagResponse getTags(String query) {
 
         Set<TagWeight> tags = tagRepository.findAll()
                 .stream()
@@ -24,7 +23,7 @@ public class TagService {
                 .map(tag -> new TagWeight(tag.getName(), normalizeTagWeight(tag.getPosts().size())))
                 .collect(Collectors.toSet());
 
-        return ResponseEntity.ok(new TagResponse(tags));
+        return new TagResponse(tags);
     }
 
     private double normalizeTagWeight(double postsWithTagCount) {

@@ -1,3 +1,4 @@
+import org.example.theblog.exceptions.UserUnauthorizedException;
 import org.example.theblog.model.entity.GlobalSetting;
 import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.GlobalSettingRepository;
@@ -7,12 +8,12 @@ import org.example.theblog.service.StatisticsService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.http.HttpStatus;
 
 import java.security.Principal;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 
 public class StatisticsServiceTest {
@@ -33,7 +34,7 @@ public class StatisticsServiceTest {
         globalSetting.setValue("YES");
         Mockito.when(globalSettingRepository.findGlobalSettingByCode("STATISTICS_IS_PUBLIC")).thenReturn(globalSetting);
 
-        assertEquals(statisticsService.getAllStatistics(principal).getStatusCode(), HttpStatus.OK);
+        assertNotNull(statisticsService.getAllStatistics(principal));
     }
 
     @Test
@@ -47,7 +48,7 @@ public class StatisticsServiceTest {
         user.setIsModerator((byte) 0);
         Mockito.when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
 
-        assertEquals(statisticsService.getAllStatistics(principal).getStatusCode(), HttpStatus.UNAUTHORIZED);
+        assertThrows(UserUnauthorizedException.class, () -> statisticsService.getAllStatistics(principal));
     }
 
     @Test
@@ -61,6 +62,6 @@ public class StatisticsServiceTest {
         user.setIsModerator((byte) 1);
         Mockito.when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
 
-        assertEquals(statisticsService.getAllStatistics(principal).getStatusCode(), HttpStatus.OK);
+        assertNotNull(statisticsService.getAllStatistics(principal));
     }
 }

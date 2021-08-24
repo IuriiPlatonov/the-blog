@@ -1,4 +1,5 @@
 
+import org.example.theblog.exceptions.MultiuserModeException;
 import org.example.theblog.model.entity.CaptchaCode;
 import org.example.theblog.model.entity.GlobalSetting;
 import org.example.theblog.model.entity.User;
@@ -10,12 +11,10 @@ import org.example.theblog.service.AuthService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 
 import java.security.Principal;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,18 +40,16 @@ public class AuthServiceTest {
     @Test
     @DisplayName("Get Auth, the Principal is null")
     public void getAuthTestWhenPrincipalNull() {
-        assertFalse(Objects.requireNonNull(authService.getAuth(null).getBody()).result(),
-                "In the getAuthTestWhenPrincipalNull, the assertFalse parameter is null");
+        assertFalse(authService.getAuth(null).result());
     }
 
     @Test
     @DisplayName("Get Auth, the Principal is not null")
     public void getAuthTest() {
         Mockito.when(principal.getName()).thenReturn(email);
-        Mockito.when(userRepository.findUsersByEmail(principal.getName())).thenReturn(user);
-
-        assertTrue(Objects.requireNonNull(authService.getAuth(principal).getBody()).result(),
-                "In the getAuthTest, the assertTrue parameter is null");
+        Mockito.when(userRepository.findByEmail(principal.getName())).thenReturn(Optional.of(user));
+        System.out.println(principal);
+        assertTrue(authService.getAuth(principal).result());
     }
 
     @Test
@@ -63,8 +60,7 @@ public class AuthServiceTest {
 
         Mockito.when(globalSetting.getValue()).thenReturn("NO");
         Mockito.when(globalSettingRepository.findGlobalSettingByCode("MULTIUSER_MODE")).thenReturn(globalSetting);
-
-        assertEquals(authService.register(registerRequest).getStatusCode(), HttpStatus.NOT_FOUND);
+        assertThrows(MultiuserModeException.class, () -> authService.register(registerRequest));
     }
 
     @Test
@@ -83,9 +79,8 @@ public class AuthServiceTest {
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
                 thenReturn(Optional.of("qwerty"));
         Mockito.when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        assertEquals(Objects.requireNonNull(authService.register(registerRequest).getBody(),
-                        "In the registerUserWithEmailDuplicateTest, the assertEquals 1st parameter is null").
-                errors(), Map.of("email", "Этот e-mail уже зарегистрирован"));
+        assertEquals(authService.register(registerRequest).errors(),
+                Map.of("email", "Этот e-mail уже зарегистрирован"));
     }
 
     @Test
@@ -104,8 +99,7 @@ public class AuthServiceTest {
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
                 thenReturn(Optional.of("qwerty"));
 
-        assertEquals(Objects.requireNonNull(authService.register(registerRequest).getBody(),
-                        "In the registerNameIsSmallTest, the assertEquals 1st parameter is null").errors(),
+        assertEquals(authService.register(registerRequest).errors(),
                 Map.of("name", "Имя указано неверно"));
     }
 
@@ -125,8 +119,7 @@ public class AuthServiceTest {
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
                 thenReturn(Optional.of("qwerty"));
 
-        assertEquals(Objects.requireNonNull(authService.register(registerRequest).getBody(),
-                        "In the registerNameIsLongTest, the assertEquals 1st parameter is null").errors(),
+        assertEquals(authService.register(registerRequest).errors(),
                 Map.of("name", "Имя указано неверно"));
     }
 
@@ -146,9 +139,8 @@ public class AuthServiceTest {
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
                 thenReturn(Optional.empty());
 
-        assertEquals(Objects.requireNonNull(authService.register(registerRequest).getBody(),
-                        "In the registerUserWithBadCaptchaTest, the assertEquals 1st parameter is null").
-                errors(), Map.of("captcha", "Код с картинки введён неверно"));
+        assertEquals(authService.register(registerRequest).errors(),
+                Map.of("captcha", "Код с картинки введён неверно"));
     }
 
     @Test
@@ -167,9 +159,8 @@ public class AuthServiceTest {
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
                 thenReturn(Optional.of("qwerty"));
 
-        assertEquals(Objects.requireNonNull(authService.register(registerRequest).getBody(),
-                        "In the registerUserWithSmallPasswordTest, the assertEquals 1st parameter is null").
-                errors(), Map.of("password", "Пароль короче 6-ти символов"));
+        assertEquals(authService.register(registerRequest).errors(),
+                Map.of("password", "Пароль короче 6-ти символов"));
     }
 
     @Test
@@ -188,9 +179,7 @@ public class AuthServiceTest {
         Mockito.when(captchaCodeRepository.findCode(registerRequest.captcha())).
                 thenReturn(Optional.of("qwerty"));
 
-        assertTrue(Objects.requireNonNull(authService.register(registerRequest).getBody(),
-                        "In the registerUserWithSmallPasswordTest, the assertEquals 1st parameter is null").
-                result());
+        assertTrue(authService.register(registerRequest).result());
     }
 
     @Test
@@ -201,8 +190,7 @@ public class AuthServiceTest {
         Mockito.when(loginRequest.eMail()).thenReturn(email);
         Mockito.when(userRepository.findByEmail(loginRequest.eMail())).thenReturn(Optional.empty());
 
-        assertFalse(Objects.requireNonNull(authService.login(loginRequest).getBody(),
-                "In the loginWithWrongEmailTest, the assertFalse is null").result());
+        assertFalse(authService.login(loginRequest).result());
     }
 
     @Test
@@ -214,8 +202,7 @@ public class AuthServiceTest {
         Mockito.when(loginRequest.password()).thenReturn("111111");
         Mockito.when(userRepository.findByEmail(loginRequest.eMail())).thenReturn(Optional.of(user));
 
-        assertFalse(Objects.requireNonNull(authService.login(loginRequest).getBody(),
-                "In the loginWithWrongPasswordTest, the assertFalse is null").result());
+        assertFalse(authService.login(loginRequest).result());
     }
 
     @Test
@@ -227,16 +214,13 @@ public class AuthServiceTest {
         Mockito.when(loginRequest.password()).thenReturn("111111");
         Mockito.when(userRepository.findByEmail(loginRequest.eMail())).thenReturn(Optional.of(user));
 
-        assertTrue(Objects.requireNonNull(authService.login(loginRequest).getBody(),
-                "In the loginTest, the assertTrue is null").result());
+        assertTrue(authService.login(loginRequest).result());
     }
 
     @Test
     @DisplayName("Logout is successful")
     public void logoutTest() {
-
-        assertTrue(Objects.requireNonNull(authService.logout().getBody(),
-                "In the logoutTest, the assertTrue is null").result());
+        assertTrue(authService.logout().result());
     }
 
     @Test
@@ -248,8 +232,7 @@ public class AuthServiceTest {
         Mockito.when(captchaCodeRepository.findCaptchaCodeBySecretCode(codeRequest.captchaSecret())).
                 thenReturn(Optional.empty());
 
-        assertEquals(Objects.requireNonNull(authService.changePassword(codeRequest).getBody(),
-                        "In the changePasswordWithOldCaptchaTest, the assertEquals 1st parameter is null").errors(),
+        assertEquals(authService.changePassword(codeRequest).errors(),
                 Map.of("code", """
                         Ссылка для восстановления пароля устарела.
                         <a href=
@@ -269,8 +252,7 @@ public class AuthServiceTest {
         Mockito.when(captchaCodeRepository.findCaptchaCodeBySecretCode(codeRequest.captchaSecret())).
                 thenReturn(Optional.of(captchaCode));
 
-        assertEquals(Objects.requireNonNull(authService.changePassword(codeRequest).getBody(),
-                        "In the changePasswordIsTooShortTest, the assertEquals 1st parameter is null").errors(),
+        assertEquals(authService.changePassword(codeRequest).errors(),
                 Map.of("password", "Пароль короче 6-ти символов"));
     }
 
@@ -287,9 +269,8 @@ public class AuthServiceTest {
         Mockito.when(captchaCodeRepository.findCaptchaCodeBySecretCode(codeRequest.captchaSecret())).
                 thenReturn(Optional.of(captchaCode));
 
-        assertEquals(Objects.requireNonNull(authService.changePassword(codeRequest).getBody(),
-                        "In the changePasswordWrongCaptchaTest, the assertEquals 1st parameter is null").
-                errors(), Map.of("captcha", "Код с картинки введён неверно"));
+        assertEquals(authService.changePassword(codeRequest).errors(),
+                Map.of("captcha", "Код с картинки введён неверно"));
     }
 
     @Test
@@ -308,8 +289,7 @@ public class AuthServiceTest {
         Mockito.when(user.getCode()).thenReturn("code");
         Mockito.when(userRepository.findUsersByCode(codeRequest.code())).thenReturn(user);
 
-        assertTrue(Objects.requireNonNull(authService.changePassword(codeRequest).getBody(),
-                "In the changePasswordTest, the assertTrue is null").result());
+        assertTrue(authService.changePassword(codeRequest).result());
     }
 
 }

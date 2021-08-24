@@ -1,15 +1,17 @@
 import com.cloudinary.Cloudinary;
 import com.cloudinary.Uploader;
 import org.example.theblog.config.ImageConfig;
+import org.example.theblog.exceptions.PostImageException;
 import org.example.theblog.service.ImageService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ImageServiceTest {
 
@@ -32,7 +34,7 @@ public class ImageServiceTest {
         Mockito.when(imageConfig.getCloudinary()).thenReturn(cloudinary);
         Mockito.when(cloudinary.uploader()).thenReturn(uploader);
 
-        assertEquals(imageService.postImage(file).getStatusCode(), HttpStatus.OK);
+        assertNull(imageService.postImage(file));
     }
 
     @Test
@@ -42,8 +44,14 @@ public class ImageServiceTest {
         Mockito.when(file.isEmpty()).thenReturn(false);
         Mockito.when(imageConfig.getCloudinary()).thenReturn(cloudinary);
         Mockito.when(cloudinary.uploader()).thenReturn(uploader);
+        PostImageException thrown = assertThrows(
+                PostImageException.class,
+                () -> imageService.postImage(file),
+                "big file"
+        );
 
-        assertEquals(imageService.postImage(file).getStatusCode(), HttpStatus.BAD_REQUEST);
+        assertEquals(thrown.getCommentResponse().errors(),
+                Map.of("image", "Размер файла превышает допустимый размер"));
     }
 
     @Test
@@ -54,6 +62,13 @@ public class ImageServiceTest {
         Mockito.when(imageConfig.getCloudinary()).thenReturn(cloudinary);
         Mockito.when(cloudinary.uploader()).thenReturn(uploader);
 
-        assertEquals(imageService.postImage(file).getStatusCode(), HttpStatus.BAD_REQUEST);
+        PostImageException thrown = assertThrows(
+                PostImageException.class,
+                () -> imageService.postImage(file),
+                "empty file"
+        );
+
+        assertEquals(thrown.getCommentResponse().errors(),
+                Map.of("image", "Размер файла превышает допустимый размер"));
     }
 }

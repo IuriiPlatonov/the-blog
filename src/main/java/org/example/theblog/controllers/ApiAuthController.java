@@ -1,8 +1,10 @@
 package org.example.theblog.controllers;
 
 import lombok.RequiredArgsConstructor;
+import org.example.theblog.exceptions.MultiuserModeException;
 import org.example.theblog.service.AuthService;
 import org.example.theblog.service.MailService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,36 +21,40 @@ public class ApiAuthController {
 
     @GetMapping("/check")
     public ResponseEntity<AuthService.AuthResponse> settings(Principal principal) {
-        return authService.getAuth(principal);
+        return ResponseEntity.ok(authService.getAuth(principal));
     }
 
     @GetMapping("/captcha")
     public ResponseEntity<AuthService.CaptchaResponse> getCaptcha() throws NoSuchAlgorithmException {
-        return authService.generateCaptcha();
+        return ResponseEntity.ok(authService.generateCaptcha());
     }
 
     @PostMapping("/register")
     public ResponseEntity<AuthService.RegisterResponse> register(@RequestBody AuthService.RegisterRequest request) {
-        return authService.register(request);
+        try {
+            return ResponseEntity.ok(authService.register(request));
+        } catch (MultiuserModeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthService.AuthResponse> login(@RequestBody AuthService.LoginRequest request) {
-        return authService.login(request);
+        return ResponseEntity.ok(authService.login(request));
     }
 
     @GetMapping("/logout")
     public ResponseEntity<AuthService.AuthResponse> logout() {
-        return authService.logout();
+        return ResponseEntity.ok(authService.logout());
     }
 
     @PostMapping("/restore")
     public ResponseEntity<MailService.MailResponse> restore(@RequestBody MailService.MailRequest request) {
-        return mailService.restore(request);
+        return ResponseEntity.ok(mailService.restore(request));
     }
 
     @PostMapping("/password")
     public ResponseEntity<AuthService.RegisterResponse> changePassword(@RequestBody AuthService.CodeRequest request) {
-        return authService.changePassword(request);
+        return ResponseEntity.ok(authService.changePassword(request));
     }
 }

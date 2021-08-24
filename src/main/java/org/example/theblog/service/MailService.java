@@ -4,13 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.example.theblog.model.entity.User;
 import org.example.theblog.model.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -21,20 +20,28 @@ public class MailService {
     private final UserRepository userRepository;
     @Value("${blog.hostAddress}")
     private String url;
+    @Value("${blog.mailSmtpAuth}")
+    private String mailSmtpAuth;
+    @Value("${blog.mailSmtpSslEnable}")
+    private String mailSmtpSslEnable;
+    @Value("${blog.mailSmtpHost}")
+    private String mailSmtpHost;
+    @Value("${blog.mailSmtpPort}")
+    private String mailSmtpPort;
 
-    public ResponseEntity<MailResponse> restore(MailRequest request) {
-        return ResponseEntity.ok(sendMail(request.email()));
+    public MailResponse restore(MailRequest request) {
+        return sendMail(request.email());
     }
 
     private MailResponse sendMail(String recipient) {
-        User user = userRepository.findByEmail(recipient).orElse(null);
+        Optional<User> user = userRepository.findByEmail(recipient);
 
-        if (Objects.nonNull(user)) {
+        if (user.isPresent()) {
             String code = UUID.randomUUID().toString();
 
             String text = String.format("Для восстановления пароля, " +
                                         "пройдите по этой ссылке: %s/login/change-password/%s", url, code);
-            user.setCode(code);
+            user.get().setCode(code);
             userRepository.flush();
 
             String blogAccountEmail = "platonov230388@gmail.com";
@@ -53,16 +60,16 @@ public class MailService {
                 e.printStackTrace();
             }
         }
-        return Objects.nonNull(user) ? new MailResponse(true) : new MailResponse(false);
+        return user.isPresent() ? new MailResponse(true) : new MailResponse(false);
     }
 
     private Properties getProperties() {
         var properties = new Properties();
 
-        properties.put("mail.smtp.auth", "true");
-        properties.put("mail.smtp.ssl.enable", "true");
-        properties.put("mail.smtp.host", "smtp.gmail.com");
-        properties.put("mail.smtp.port", "465");
+        properties.put("mail.smtp.auth", mailSmtpAuth);
+        properties.put("mail.smtp.ssl.enable", mailSmtpSslEnable);
+        properties.put("mail.smtp.host", mailSmtpHost);
+        properties.put("mail.smtp.port", mailSmtpPort);
         return properties;
     }
 

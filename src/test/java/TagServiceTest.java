@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,8 +34,7 @@ public class TagServiceTest {
         Mockito.when(postRepository.count()).thenReturn(20L);
         Mockito.when(tagRepository.findMaxPostsCountInTags()).thenReturn(3);
 
-        assertEquals(Objects.requireNonNull(tagService.getTags(null).getBody(),
-                        "In the getTagsTest, the assertEquals parameter is null").tags(),
+        assertEquals(tagService.getTags(null).tags(),
                 Set.of(new TagService.TagWeight("testTwo", 1.0),
                         new TagService.TagWeight("testOne", 0.6666666666666667)));
     }
@@ -58,9 +56,8 @@ public class TagServiceTest {
         Mockito.when(postRepository.count()).thenReturn(20L);
         Mockito.when(tagRepository.findMaxPostsCountInTags()).thenReturn(3);
 
-        assertEquals(Objects.requireNonNull(tagService.getTags("Two").getBody(),
-                        "In the getTagsWithQueryTest, the assertEquals parameter is null").tags(),
-                Set.of(new TagService.TagWeight("testTwo", 1.0) ));
+        assertEquals(tagService.getTags("Two").tags(),
+                Set.of(new TagService.TagWeight("testTwo", 1.0)));
 
     }
 }

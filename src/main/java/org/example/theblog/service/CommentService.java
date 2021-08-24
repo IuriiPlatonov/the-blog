@@ -3,12 +3,11 @@ package org.example.theblog.service;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import org.example.theblog.exceptions.PostCommentException;
 import org.example.theblog.model.entity.PostComment;
 import org.example.theblog.model.repository.PostCommentRepository;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.UserRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -25,7 +24,7 @@ public class CommentService {
     private final PostCommentRepository postCommentRepository;
     private final UserRepository userRepository;
 
-    public ResponseEntity<?> postComment(CommentRequest request, Principal principal) {
+    public int postComment(CommentRequest request, Principal principal) {
         Map<String, String> errors = new HashMap<>();
         boolean correctParentId = Objects.nonNull(request.parentId()) &&
                                   request.parentId().matches("\\d+");
@@ -68,10 +67,12 @@ public class CommentService {
             id = postCommentRepository.save(postComment).getId();
 
         }
-        return result
-                ? ResponseEntity.ok(id)
-                : new ResponseEntity<>(new CommentResponse(false, errors), HttpStatus.BAD_REQUEST);
 
+        if (!result) {
+            throw new PostCommentException(new CommentResponse(false, errors));
+        }
+
+        return id;
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

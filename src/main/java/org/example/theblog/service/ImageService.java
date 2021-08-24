@@ -5,8 +5,7 @@ import com.cloudinary.utils.ObjectUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import org.example.theblog.config.ImageConfig;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.example.theblog.exceptions.PostImageException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,12 +19,12 @@ public class ImageService {
 
     private final ImageConfig imageConfig;
 
-    public ResponseEntity<?> postImage(MultipartFile file) {
+    public String postImage(MultipartFile file) {
         Map<String, String> errors = new HashMap<>();
 
         if (file.isEmpty() || file.getSize() >= 1024 * 1024 * 4) {
             errors.put("image", "Размер файла превышает допустимый размер");
-            return new ResponseEntity<>(new ImageResponse(false, errors), HttpStatus.BAD_REQUEST);
+            throw new PostImageException(new ImageResponse(false, errors));
         }
 
         Cloudinary cloudinary = imageConfig.getCloudinary();
@@ -38,7 +37,7 @@ public class ImageService {
             e.printStackTrace();
         }
 
-        return ResponseEntity.ok(result.get("url"));
+        return result.get("url");
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
