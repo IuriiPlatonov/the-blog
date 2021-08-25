@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 
@@ -14,7 +15,7 @@ import java.util.Optional;
 public interface CaptchaCodeRepository extends JpaRepository<CaptchaCode, Integer> {
 
     @Transactional()
-    Integer deleteCaptchaCodeBySecretCode(String secretCode);
+    void deleteAllByTimeIsLessThanEqual(LocalDateTime time);
 
     @Query("SELECT c.code from CaptchaCode c where c.code = :code")
     Optional<String> findCode(@Param("code") String code);

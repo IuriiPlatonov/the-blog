@@ -17,7 +17,6 @@ import org.example.theblog.model.repository.CaptchaCodeRepository;
 import org.example.theblog.model.repository.GlobalSettingRepository;
 import org.example.theblog.model.repository.PostRepository;
 import org.example.theblog.model.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -32,9 +31,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -45,8 +41,6 @@ public class AuthService {
     private final CaptchaCodeRepository captchaCodeRepository;
     private final UserRepository userRepository;
     private final GlobalSettingRepository globalSettingRepository;
-    @Value("${blog.timeToDeleteCaptchaCodeInMinutes}")
-    private int time;
 
     public AuthResponse getAuth(Principal principal) {
         if (Objects.isNull(principal)) {
@@ -68,10 +62,6 @@ public class AuthService {
         captchaCode.setSecretCode(secretCode);
         captchaCodeRepository.save(captchaCode);
 
-        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-        service.schedule(() -> captchaCodeRepository.deleteCaptchaCodeBySecretCode(secretCode),
-                this.time, TimeUnit.MINUTES);
-//        deleteCaptchaCodeAfterOneHour();
         return new CaptchaResponse(secretCode, "data:image/png;base64, ".concat(encodedCaptchaPicture));
     }
 
