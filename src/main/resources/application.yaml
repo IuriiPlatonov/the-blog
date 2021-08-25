@@ -14,7 +14,8 @@ spring.servlet.multipart.max-request-size: 20MB
 
 blog:
   hostAddress: https://skillbox-the-blog.herokuapp.com
-  timeToDeleteCaptchaCodeInMinutes: 60
+  captchaCodeLifecycle: 60
+  intervalForClearingCaptchaCodesInMilliseconds: 60000
   title: the-blog
   subtitle: Рассказы разработчиков
   phone: +7 905 655-41-53
