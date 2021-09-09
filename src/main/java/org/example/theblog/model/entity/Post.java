@@ -1,16 +1,16 @@
 package org.example.theblog.model.entity;
 
-import lombok.Data;
-import lombok.ToString;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Data
+@Setter
+@Getter
 @Table(name = "posts")
-@ToString(callSuper = true, of = {"title"})
 public class Post {
 
     @Id

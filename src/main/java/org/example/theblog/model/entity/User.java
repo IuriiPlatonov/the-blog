@@ -1,17 +1,15 @@
 package org.example.theblog.model.entity;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.Getter;
+import lombok.Setter;
 import org.example.theblog.config.Role;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Data
-@EqualsAndHashCode(of = {"id"})
-@ToString(callSuper = true, of = {"name"})
+@Setter
+@Getter
 @Table(name = "users")
 public class User {
 

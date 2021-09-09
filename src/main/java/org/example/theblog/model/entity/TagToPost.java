@@ -1,11 +1,13 @@
 package org.example.theblog.model.entity;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 
 @Entity
-@Data
+@Setter
+@Getter
 @Table(name = "tag2post")
 public class TagToPost {
 
