@@ -1,12 +1,14 @@
 package org.example.theblog.model.entity;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Setter
+@Getter
 @Table(name = "post_comments")
 public class PostComment {
 
