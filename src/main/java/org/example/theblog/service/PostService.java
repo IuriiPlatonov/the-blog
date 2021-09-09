@@ -230,7 +230,7 @@ public class PostService {
     }
 
     private String getAnnounce(String text) {
-        text = text.replaceAll("<.*>", "");
+        text = text.replaceAll("<.*?>", "").replaceAll("&nbsp;", "");
         return text.length() > 150 ? text.substring(0, 149).concat("...") : text;
     }
 
