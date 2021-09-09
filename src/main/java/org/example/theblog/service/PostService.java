@@ -230,9 +230,8 @@ public class PostService {
     }
 
     private String getAnnounce(String text) {
-        return text.length() > 150 ?
-                text.substring(0, 149).replaceAll("<\\D+>", "").concat("...") :
-                text.replaceAll("<\\D+>", "");
+        text = text.replaceAll("<.*>", "");
+        return text.length() > 150 ? text.substring(0, 149).concat("...") : text;
     }
 
     private List<String> getTags(List<Tag> tagsList) {
