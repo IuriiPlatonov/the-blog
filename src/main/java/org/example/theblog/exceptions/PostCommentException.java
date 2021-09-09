@@ -3,7 +3,7 @@ package org.example.theblog.exceptions;
 import org.example.theblog.service.CommentService;
 
 public class PostCommentException extends RuntimeException{
-    private CommentService.CommentResponse commentResponse;
+    private final CommentService.CommentResponse commentResponse;
 
     public CommentService.CommentResponse getCommentResponse() {
         return commentResponse;
