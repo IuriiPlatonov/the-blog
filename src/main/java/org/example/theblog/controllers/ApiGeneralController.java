@@ -2,7 +2,6 @@ package org.example.theblog.controllers;
 
 import lombok.AllArgsConstructor;
 import org.example.theblog.exceptions.PostCommentException;
-import org.example.theblog.exceptions.PostImageException;
 import org.example.theblog.exceptions.UserUnauthorizedException;
 import org.example.theblog.service.*;
 import org.springframework.http.HttpStatus;
@@ -10,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
@@ -56,22 +56,15 @@ public class ApiGeneralController {
     @PostMapping("/api/comment")
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<?> postComment(@RequestBody CommentService.CommentRequest request, Principal principal) {
-        try {
             return ResponseEntity.ok(commentService.postComment(request, principal));
-        } catch (PostCommentException e) {
-            return new ResponseEntity<>(e.getCommentResponse(), HttpStatus.BAD_REQUEST);
-        }
     }
 
     @PostMapping("/api/image")
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<?> postImage(@RequestParam("image") MultipartFile file) {
-        try {
-            return ResponseEntity.ok(imageService.postImage(file));
-        } catch (PostImageException e) {
-            return new ResponseEntity<>(e.getCommentResponse(), HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<String> postImage(@RequestParam("image") MultipartFile file) throws MaxUploadSizeExceededException {
+        return ResponseEntity.ok(imageService.postImage(file));
     }
+
 
     @PostMapping("/api/moderation")
     @PreAuthorize("hasAuthority('user:moderate')")
@@ -108,10 +101,6 @@ public class ApiGeneralController {
 
     @GetMapping("/api/statistics/all")
     public ResponseEntity<StatisticsService.StatisticsResponse> getAllStatistics(Principal principal) {
-        try {
             return ResponseEntity.ok(statisticsService.getAllStatistics(principal));
-        } catch (UserUnauthorizedException e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
     }
 }
